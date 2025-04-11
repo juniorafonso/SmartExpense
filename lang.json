@@ -65,9 +65,19 @@
     "one_time": "Pontual",
     "current_file": "Arquivo atual",
     "remove": "Remover",
-    "every_day": "Todo dia"
-
-
+    "every_day": "Todo dia",
+    "payment_methods": "Formas de Pagamento",
+    "logout": "Sair",
+    "country": "País",
+    "confirm_delete_payment": "Tem certeza que deseja excluir este método de pagamento?",
+    "no_payment_methods": "Nenhum método de pagamento cadastrado.",
+    "bank_accounts": "Contas Bancárias",
+    "credit_cards": "Cartões de Crédito",
+    "cash": "Dinheiro",
+    "bank": "Banco",
+    "account_id": "ID da Conta",
+    "account_type": "Tipo de Conta",
+    "card_number": "Número do Cartão"
   },
   "en": {
     "app_name": "SmartExpense",
@@ -135,8 +145,19 @@
     "one_time": "One-time",
     "current_file": "Current file",
     "remove": "Remove",
-    "every_day": "Every"
-
+    "every_day": "Every",
+    "payment_methods": "Payment Methods",
+    "logout": "Logout",
+    "country": "Country",
+    "confirm_delete_payment": "Are you sure you want to delete this payment method?",
+    "no_payment_methods": "No payment methods registered.",
+    "bank_accounts": "Bank Accounts",
+    "credit_cards": "Credit Cards",
+    "cash": "Cash",
+    "bank": "Bank",
+    "account_id": "Account ID",
+    "account_type": "Account Type",
+    "card_number": "Card Number"
   },
   "fr": {
     "app_name": "SmartExpense",
@@ -161,7 +182,7 @@
     "observations": "Remarques",
     "projects": "Projets",
     "project": "Projet",
-    "create_project": "Créer un projet",
+    "create_project": "Créer um projet",
     "in_progress": "En cours",
     "finished": "Terminés",
     "finished_sing": "Terminé",
@@ -204,7 +225,18 @@
     "one_time": "Ponctuel",
     "current_file": "Fichier actuel",
     "remove": "Supprimer",
-    "every_day": "Jour du mois:"
-
+    "every_day": "Jour du mois:",
+    "payment_methods": "Méthodes de Paiement",
+    "logout": "Déconnexion",
+    "country": "Pays",
+    "confirm_delete_payment": "Êtes-vous sûr de vouloir supprimer ce mode de paiement ?",
+    "no_payment_methods": "Aucun mode de paiement enregistré.",
+    "bank_accounts": "Comptes Bancaires",
+    "credit_cards": "Cartes de Crédit",
+    "cash": "Espèces",
+    "bank": "Banque",
+    "account_id": "ID du Compte",
+    "account_type": "Type de Compte",
+    "card_number": "Numéro de Carte"
   }
 }

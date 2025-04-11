@@ -1,11 +1,11 @@
 <h1 class="mb-4">📋 <%= lang.in_progress || 'In progress' %></h1>
-
-<table class="table table-bordered">
+<div class="bg-white border rounded p-3 mb-4">
+<table class="table">
   <thead>
     <tr>
-      <th style="width: 70%; background-color: rgb(199, 199, 199);"><%= lang.name || 'Name' %></th>
-      <th style="width: 20%; background-color: rgb(199, 199, 199);" class="text-center"><%= lang.status || 'Status' %></th>
-      <th style="width: 10%; background-color: rgb(199, 199, 199);"  class="text-center"></th>
+      <th style="width: 70%;"><%= lang.name || 'Name' %></th>
+      <th style="width: 20%;" class="text-center"><%= lang.status || 'Status' %></th>
+      <th style="width: 10%;"  class="text-center"></th>
     </tr>
   </thead>
   <tbody>
@@ -41,3 +41,4 @@
     <% }); %>
   </tbody>
 </table>
+</div>

@@ -472,6 +472,292 @@ app.post('/projeto/:nome/despesas/:id/unpaid', requireLogin, (req, res) => {
   });
 });
 
+app.get('/payments', requireLogin, (req, res) => {
+  db.all('SELECT * FROM Payments', (err, payments) => {
+    if (err) {
+      console.error('Erro ao buscar métodos de pagamento:', err);
+      return res.status(500).send('Erro ao buscar métodos de pagamento.');
+    }
+    res.render('payments-methods', {
+      payments: payments,
+      countries: [], // deixamos vazio por enquanto
+      currencies: [], // idem
+      lang: req.session.language || 'en'
+    });
+  });
+});
+
+app.get('/payments/form-data', requireLogin, async (req, res) => {
+  try {
+    // Buscar países
+    const countriesRes = await fetch('https://restcountries.com/v3.1/all');
+    const countriesData = await countriesRes.json();
+    const countries = countriesData.map(country => ({
+      code: country.cca2,
+      name: country.name.common
+    })).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Buscar moedas
+    const currenciesRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const currenciesData = await currenciesRes.json();
+    const currencies = Object.keys(currenciesData.rates).map(code => ({
+      code: code,
+      name: code
+    })).sort((a, b) => a.code.localeCompare(b.code));
+
+    res.json({ countries, currencies });
+  } catch (error) {
+    console.error('Erro ao buscar dados do formulário:', error);
+    res.status(500).json({ countries: [], currencies: [] });
+  }
+});
+
+app.post('/payments', requireLogin, (req, res) => {
+  let {
+    tipo_pagamento,
+    nome,
+    banco,
+    id_conta,
+    tipo_conta,
+    moeda,
+    pais,
+    nome_cartao,
+    id_cartao,
+    moeda_dinheiro
+  } = req.body;
+
+  // Função segura para limpar campos
+  function sanitizeField(field) {
+    if (typeof field === 'object') {
+      try {
+        if (field.code) return String(field.code);
+        return Array.isArray(field) ? String(field[0]) : JSON.stringify(field);
+      } catch {
+        return '';
+      }
+    }
+    return String(field || '');
+  }
+
+  // Corrige campos com base na aba ativa
+  if (tipo_pagamento === 'cartao_credito') {
+    nome = sanitizeField(nome_cartao);
+    id_conta = sanitizeField(id_cartao);
+    banco = '';
+    tipo_conta = '';
+    pais = '';
+    moeda = '';
+  } else if (tipo_pagamento === 'dinheiro') {
+    nome = 'Cash';
+    banco = '';
+    id_conta = '';
+    tipo_conta = '';
+    pais = '';
+    moeda = sanitizeField(moeda_dinheiro);
+  } else if (tipo_pagamento === 'conta_bancaria') {
+    nome = sanitizeField(nome);
+    banco = sanitizeField(banco);
+    id_conta = sanitizeField(id_conta);
+    tipo_conta = sanitizeField(tipo_conta);
+    moeda = sanitizeField(moeda);
+    pais = sanitizeField(pais);
+  }
+
+  // Validação
+  if (tipo_pagamento === 'conta_bancaria') {
+    if (!nome || !banco || !id_conta || !tipo_conta || !moeda || !pais) {
+      return res.status(400).send('Please fill in all required fields for Bank Account.');
+    }
+  } else if (tipo_pagamento === 'cartao_credito') {
+    if (!nome || !id_conta) {
+      return res.status(400).send('Please fill in all required fields for Credit Card.');
+    }
+  } else if (tipo_pagamento === 'dinheiro') {
+    if (!moeda) {
+      return res.status(400).send('Please select a currency for Cash.');
+    }
+  } else {
+    return res.status(400).send('Invalid payment type.');
+  }
+
+  // Inserção no banco
+  db.run(
+    `INSERT INTO Payments (tipo_pagamento, nome, banco, id_conta, tipo_conta, moeda, pais) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [tipo_pagamento, nome, banco, id_conta, tipo_conta, moeda, pais],
+    (err) => {
+      if (err) {
+        console.error('Error creating payment method:', err);
+        return res.status(500).send('Failed to create payment method. Please try again later.');
+      }
+      console.log('Payment method successfully created!');
+      res.redirect('/payments');
+    }
+  );
+});
+
+app.post('/payments/:id/delete', requireLogin, (req, res) => {
+  const id = req.params.id;
+
+  db.run('DELETE FROM Payments WHERE id = ?', [id], (err) => {
+    if (err) {
+      console.error('Error deleting payment method:', err);
+      return res.status(500).send('Failed to delete payment method. Please try again later.');
+    }
+    console.log(`Payment method with ID ${id} deleted successfully.`);
+    res.redirect('/payments');
+  });
+});
+
+app.get('/payments/:id/edit', requireLogin, async (req, res) => {
+  const id = req.params.id;
+
+  db.get('SELECT * FROM Payments WHERE id = ?', [id], async (err, payment) => {
+    if (err || !payment) {
+      console.error('Erro ao buscar método de pagamento:', err);
+      return res.status(500).send('Erro ao carregar método de pagamento.');
+    }
+
+    try {
+      // Países
+      const countriesRes = await fetch('https://restcountries.com/v3.1/all');
+      const countriesData = await countriesRes.json();
+      const countries = countriesData.map(country => ({
+        code: country.cca2,
+        name: country.name.common
+      })).sort((a, b) => a.name.localeCompare(b.name));
+
+      // Moedas
+      const currenciesRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const currenciesData = await currenciesRes.json();
+      const currencies = Object.keys(currenciesData.rates).map(code => ({
+        code: code,
+        name: code
+      })).sort((a, b) => a.code.localeCompare(b.code));
+
+      res.render('payment-edit', {
+        payment,
+        countries,
+        currencies,
+        lang: req.session.language || 'en'
+      });
+    } catch (error) {
+      console.error('Erro ao carregar países e moedas:', error);
+      res.status(500).send('Erro ao preparar edição.');
+    }
+  });
+});
+
+app.get('/payments/:id/json', requireLogin, async (req, res) => {
+  const id = req.params.id;
+
+  db.get('SELECT * FROM Payments WHERE id = ?', [id], async (err, payment) => {
+    if (err || !payment) {
+      return res.status(404).json({ error: 'Payment method not found.' });
+    }
+
+    try {
+      // Países
+      const countriesRes = await fetch('https://restcountries.com/v3.1/all');
+      const countriesData = await countriesRes.json();
+      const countries = countriesData.map(c => ({
+        code: c.cca2,
+        name: c.name.common
+      })).sort((a, b) => a.name.localeCompare(b.name));
+
+      // Moedas
+      const currenciesRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const currenciesData = await currenciesRes.json();
+      const currencies = Object.keys(currenciesData.rates).map(code => ({
+        code,
+        name: code
+      })).sort((a, b) => a.code.localeCompare(b.code));
+
+      res.json({ payment, countries, currencies });
+    } catch (error) {
+      console.error('Erro ao buscar dados para edição:', error);
+      res.status(500).json({ error: 'Failed to fetch form data.' });
+    }
+  });
+});
+
+app.post('/payments/:id/edit', requireLogin, (req, res) => {
+  const id = req.params.id;
+  let {
+    tipo_pagamento,
+    nome,
+    banco,
+    id_conta,
+    tipo_conta,
+    moeda,
+    pais,
+    nome_cartao,
+    id_cartao,
+    moeda_dinheiro
+  } = req.body;
+
+  // Sanitização
+  function sanitizeField(field) {
+    if (typeof field === 'object') {
+      try {
+        if (field.code) return String(field.code);
+        return Array.isArray(field) ? String(field[0]) : JSON.stringify(field);
+      } catch {
+        return '';
+      }
+    }
+    return String(field || '');
+  }
+
+  if (tipo_pagamento === 'cartao_credito') {
+    nome = sanitizeField(nome_cartao);
+    id_conta = sanitizeField(id_cartao);
+    banco = '';
+    tipo_conta = '';
+    pais = '';
+    moeda = '';
+  } else if (tipo_pagamento === 'dinheiro') {
+    nome = 'Cash';
+    banco = '';
+    id_conta = '';
+    tipo_conta = '';
+    pais = '';
+    moeda = sanitizeField(moeda_dinheiro);
+  } else if (tipo_pagamento === 'conta_bancaria') {
+    nome = sanitizeField(nome);
+    banco = sanitizeField(banco);
+    id_conta = sanitizeField(id_conta);
+    tipo_conta = sanitizeField(tipo_conta);
+    pais = sanitizeField(pais);
+    moeda = sanitizeField(moeda);
+  }
+
+  db.run(
+    `UPDATE Payments SET nome = ?, banco = ?, id_conta = ?, tipo_conta = ?, moeda = ?, pais = ? WHERE id = ?`,
+    [nome, banco, id_conta, tipo_conta, moeda, pais, id],
+    (err) => {
+      if (err) {
+        console.error('Erro ao atualizar método de pagamento:', err);
+        return res.status(500).send('Erro ao atualizar método de pagamento.');
+      }
+      console.log(`Método de pagamento ${id} atualizado com sucesso.`);
+      res.redirect('/payments');
+    }
+  );
+});
+
+
+
+app.get('/logout', (req, res) => {
+  // Lógica para encerrar a sessão do usuário (ex: destruir a sessão)
+  req.session.destroy((err) => {
+    if (err) {
+      console.log(err);
+    }
+    // Redirecionar o usuário para a página de login
+    res.redirect('/login');
+  });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`SmartExpense rodando em http://localhost:${PORT}`);

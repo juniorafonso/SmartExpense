@@ -1,0 +1,410 @@
+<h1 class="mb-4">💳 <%= lang.payment_methods || 'Payment Methods' %></h1>
+<div class="mb-3 text-start d-flex gap-2">
+    <button class="btn btn-success" onclick="mostrarModalAdicionar()">
+        <%= lang.add_payment_method || 'Add Payment Method' %>
+    </button>
+</div>
+
+<!-- BLOCO: Bank Accounts -->
+<div class="bg-white border rounded p-3 mb-4">
+    <h3 class="mt-4">🏦 <%= lang.bank_accounts || 'Bank Accounts' %></h3>
+    <% const contasBancarias = payments.filter(p => p.tipo_pagamento === 'conta_bancaria'); %>
+    <% if (contasBancarias.length > 0) { %>
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 20%;"><%= lang.name || 'Name' %></th>
+                <th style="width: 20%;"><%= lang.bank || 'Bank' %></th>
+                <th style="width: 20%;"><%= lang.account_id || 'Account ID' %></th>
+                <th class="text-center" style="width: 10%;"><%= lang.account_type || 'Account Type' %></th>
+                <th class="text-center" style="width: 10%;"><%= lang.country || 'Country' %></th>
+                <th class="text-center" style="width: 10%;"><%= lang.currency || 'Currency' %></th>
+                <th class="text-center" style="width: 10%;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <% contasBancarias.forEach(payment => { %>
+            <tr>
+                <td><%= payment.nome %></td>
+                <td><%= payment.banco %></td>
+                <td><%= payment.id_conta %></td>
+                <td class="text-center">
+                    <%= payment.tipo_conta === 'corrente'
+                      ? (lang.checking_account || 'Checking')
+                      : (lang.savings_account || 'Savings') %>
+                </td>                  
+                <td class="text-center" ><%= payment.pais %></td>
+                <td class="text-center" ><%= payment.moeda %></td>
+                <td class="text-center">
+                    <%- include('partials/payment-actions', { payment, lang }) %>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } else { %>
+    <p><%= lang.no_payment_methods || 'No payment methods registered.' %></p>
+    <% } %>
+</div>
+<!-- BLOCO: Credit Cards -->
+<div class="bg-white border rounded p-3 mb-4">
+    <h3 class="mt-5">💳 <%= lang.credit_cards || 'Credit Cards' %></h3>
+    <% const cartoes = payments.filter(p => p.tipo_pagamento === 'cartao_credito'); %>
+    <% if (cartoes.length > 0) { %>
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 45%;"><%= lang.name || 'Name' %></th>
+                <th style="width: 45%;"><%= lang.card_number || 'Card Number' %></th>
+                <th style="width: 10%;" class="text-center"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <% cartoes.forEach(payment => { %>
+            <tr>
+                <td><%= payment.nome %></td>
+                <td><%= payment.id_conta %></td>
+                <td class="text-center">
+                    <%- include('partials/payment-actions', { payment, lang }) %>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } else { %>
+    <p><%= lang.no_payment_methods || 'No payment methods registered.' %></p>
+    <% } %>
+</div>
+<!-- BLOCO: Cash -->
+<div class="bg-white border rounded p-3 mb-4">
+    <h3 class="mt-5">💰 <%= lang.cash || 'Cash' %></h3>
+    <% const dinheiro = payments.filter(p => p.tipo_pagamento === 'dinheiro'); %>
+    <% if (dinheiro.length > 0) { %>
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 90%;"><%= lang.currency || 'Currency' %></th>
+                <th style="width: 10%;" class="text-center"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <% dinheiro.forEach(payment => { %>
+            <tr>
+                <td><%= payment.moeda %></td>
+                <td class="text-center">
+                    <%- include('partials/payment-actions', { payment, lang }) %>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } else { %>
+    <p><%= lang.no_payment_methods || 'No payment methods registered.' %></p>
+    <% } %>
+</div>
+<!-- Modal Adicionar -->
+<div class="modal fade" id="modalAdicionarPagamento" tabindex="-1"
+    aria-labelledby="modalAdicionarPagamentoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/payments" method="POST">
+        <input type="hidden" name="tipo_pagamento" id="tipo_pagamento" value="conta_bancaria">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAdicionarPagamentoLabel">
+            <%= lang.add_payment_method || 'Add Payment Method' %>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <ul class="nav nav-tabs mb-3" id="tipoPagamentoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#bank" type="button" role="tab">
+                <%= lang.bank_accounts || 'Bank Accounts' %>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#card" type="button" role="tab">
+                <%= lang.credit_cards || 'Credit Cards' %>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#cash" type="button" role="tab">
+                <%= lang.cash || 'Cash' %>
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+            <!-- BANCO -->
+            <div class="tab-pane fade show active" id="bank" role="tabpanel">
+              <div class="mb-3">
+                <label class="form-label"><%= lang.name || 'Name' %></label>
+                <input type="text" class="form-control" name="nome" >
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><%= lang.bank || 'Bank' %></label>
+                <input type="text" class="form-control" name="banco" >
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><%= lang.account_id || 'Account ID' %></label>
+                <input type="text" class="form-control" name="id_conta" >
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><%= lang.account_type || 'Account Type' %></label>
+                <select class="form-select" name="tipo_conta" >
+                  <option value="corrente"><%= lang.checking_account || 'Checking' %></option>
+                  <option value="poupanca"><%= lang.savings_account || 'Savings' %></option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><%= lang.country || 'Country' %></label>
+                <select class="form-select" name="pais" >
+                  <option value="">--</option>
+                  <% countries.forEach(c => { %>
+                    <option value="<%= c.code %>"><%= c.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><%= lang.currency || 'Currency' %></label>
+                <select class="form-select" name="moeda" >
+                  <option value="">--</option>
+                  <% currencies.forEach(c => { %>
+                    <option value="<%= c.code %>"><%= c.code %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+
+            <!-- CARTÃO -->
+            <div class="tab-pane fade" id="card" role="tabpanel">
+              <div class="mb-3">
+                <label class="form-label"><%= lang.name || 'Name' %></label>
+                <input type="text" class="form-control" name="nome_cartao" >
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><%= lang.card_number || 'Card Number' %></label>
+                <input type="text" class="form-control" name="id_cartao" >
+              </div>
+            </div>
+
+            <!-- DINHEIRO -->
+            <div class="tab-pane fade" id="cash" role="tabpanel">
+              <div class="mb-3">
+                <label class="form-label"><%= lang.currency || 'Currency' %></label>
+                <select class="form-select" name="moeda_dinheiro" >
+                  <option value="">--</option>
+                  <% currencies.forEach(c => { %>
+                    <option value="<%= c.code %>"><%= c.code %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditarPagamento" tabindex="-1" aria-labelledby="modalEditarPagamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="formEditarPagamento" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalEditarPagamentoLabel"><%= lang.edit || 'Edit' %></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+  
+          <div class="modal-body">
+            <!-- Aqui vamos injetar dinamicamente os campos do tipo de pagamento -->
+            <div id="editarCampos"></div>
+          </div>
+  
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.cancel || 'Cancel' %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+</div>
+  
+
+  
+<script>
+    const lang = <%- JSON.stringify(lang) %>;
+
+    async function mostrarModalAdicionar() {
+      console.log("🔔 Modal aberto");
+    
+      try {
+        const res = await fetch('/payments/form-data');
+        const data = await res.json();
+        popularCamposSelect(data.countries, data.currencies);
+      } catch (err) {
+        console.error('Erro ao buscar dados para o formulário:', err);
+      }
+    
+      const modal = new bootstrap.Modal(document.getElementById('modalAdicionarPagamento'));
+      modal.show();
+    }
+    
+    function popularCamposSelect(countries, currencies) {
+      const paisSelect = document.querySelector('[name="pais"]');
+      const moedaBanco = document.querySelector('[name="moeda"]');
+      const moedaDinheiro = document.querySelector('[name="moeda_dinheiro"]');
+    
+      if (paisSelect) {
+        paisSelect.innerHTML = `<option value="">--</option>`;
+        countries.forEach(c => {
+          paisSelect.innerHTML += `<option value="${c.code}">${c.name}</option>`;
+        });
+      }
+    
+      if (moedaBanco) {
+        moedaBanco.innerHTML = `<option value="">--</option>`;
+        currencies.forEach(c => {
+          moedaBanco.innerHTML += `<option value="${c.code}">${c.code}</option>`;
+        });
+      }
+    
+      if (moedaDinheiro) {
+        moedaDinheiro.innerHTML = `<option value="">--</option>`;
+        currencies.forEach(c => {
+          moedaDinheiro.innerHTML += `<option value="${c.code}">${c.code}</option>`;
+        });
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipoInput = document.getElementById('tipo_pagamento');
+      const tabButtons = document.querySelectorAll('#tipoPagamentoTabs button[data-bs-toggle="tab"]');
+    
+      tabButtons.forEach(btn => {
+        btn.addEventListener('shown.bs.tab', () => {
+          const target = btn.getAttribute('data-bs-target');
+          console.log("🟢 Aba ativada:", target);
+          if (target === '#bank') tipoInput.value = 'conta_bancaria';
+          else if (target === '#card') tipoInput.value = 'cartao_credito';
+          else if (target === '#cash') tipoInput.value = 'dinheiro';
+        });
+      });
+    
+      // Validação manual apenas dos campos visíveis
+      const form = document.querySelector('#modalAdicionarPagamento form');
+      form.addEventListener('submit', function (e) {
+        const activeTab = document.querySelector('.tab-pane.active');
+        const requiredFields = activeTab.querySelectorAll('[name][class*="form-control"], [name].form-select');
+    
+        let valid = true;
+        requiredFields.forEach(field => {
+          if (!field.value) {
+            field.classList.add('is-invalid');
+            valid = false;
+          } else {
+            field.classList.remove('is-invalid');
+          }
+        });
+    
+        if (!valid) {
+          e.preventDefault();
+          alert("Please fill in the required fields.");
+        }
+      });
+    });
+    
+    async function abrirModalEditar(paymentId) {
+        try {
+            const res = await fetch(`/payments/${paymentId}/json`);
+            const { payment, countries, currencies } = await res.json();
+
+            const form = document.getElementById('formEditarPagamento');
+            const campos = document.getElementById('editarCampos');
+
+            // Atualiza a action do formulário
+            form.action = `/payments/${payment.id}/edit`;
+
+            let html = '';
+
+            if (payment.tipo_pagamento === 'conta_bancaria') {
+            html += `
+                <input type="hidden" name="tipo_pagamento" value="conta_bancaria">
+                <div class="mb-3">
+                <label class="form-label">${lang.name || 'Name'}</label>
+                <input type="text" class="form-control" name="nome" value="${payment.nome}">
+                </div>
+                <div class="mb-3">
+                <label class="form-label">${lang.bank || 'Bank'}</label>
+                <input type="text" class="form-control" name="banco" value="${payment.banco}">
+                </div>
+                <div class="mb-3">
+                <label class="form-label">${lang.account_id || 'Account ID'}</label>
+                <input type="text" class="form-control" name="id_conta" value="${payment.id_conta}">
+                </div>
+                <div class="mb-3">
+                <label class="form-label">${lang.account_type || 'Account Type'}</label>
+                <select class="form-select" name="tipo_conta">
+                    <option value="corrente" ${payment.tipo_conta === 'corrente' ? 'selected' : ''}>${lang.checking_account || 'Checking'}</option>
+                    <option value="poupanca" ${payment.tipo_conta === 'poupanca' ? 'selected' : ''}>${lang.savings_account || 'Savings'}</option>
+                </select>
+                </div>
+                <div class="mb-3">
+                <label class="form-label">${lang.country || 'Country'}</label>
+                <select class="form-select" name="pais">
+                    <option value="">--</option>
+                    ${countries.map(c => `<option value="${c.code}" ${payment.pais === c.code ? 'selected' : ''}>${c.name}</option>`).join('')}
+                </select>
+                </div>
+                <div class="mb-3">
+                <label class="form-label">${lang.currency || 'Currency'}</label>
+                <select class="form-select" name="moeda">
+                    <option value="">--</option>
+                    ${currencies.map(c => `<option value="${c.code}" ${payment.moeda === c.code ? 'selected' : ''}>${c.code}</option>`).join('')}
+                </select>
+                </div>
+            `;
+            } else if (payment.tipo_pagamento === 'cartao_credito') {
+            html += `
+                <input type="hidden" name="tipo_pagamento" value="cartao_credito">
+                <div class="mb-3">
+                <label class="form-label">${lang.name || 'Name'}</label>
+                <input type="text" class="form-control" name="nome_cartao" value="${payment.nome}">
+                </div>
+                <div class="mb-3">
+                <label class="form-label">${lang.card_number || 'Card Number'}</label>
+                <input type="text" class="form-control" name="id_cartao" value="${payment.id_conta}">
+                </div>
+            `;
+            } else if (payment.tipo_pagamento === 'dinheiro') {
+            html += `
+                <input type="hidden" name="tipo_pagamento" value="dinheiro">
+                <div class="mb-3">
+                <label class="form-label">${lang.currency || 'Currency'}</label>
+                <select class="form-select" name="moeda_dinheiro">
+                    <option value="">--</option>
+                    ${currencies.map(c => `<option value="${c.code}" ${payment.moeda === c.code ? 'selected' : ''}>${c.code}</option>`).join('')}
+                </select>
+                </div>
+            `;
+            }
+
+            campos.innerHTML = html;
+
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarPagamento'));
+            modal.show();
+        } catch (error) {
+            console.error('Erro ao carregar dados para edição:', error);
+            alert('Erro ao carregar dados do pagamento.');
+        }
+    }
+    </script>
+    
+    
