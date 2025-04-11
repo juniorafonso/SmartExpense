@@ -1,0 +1,26 @@
+<h2><%= lang.edit_project %>: <%= projeto.nome %></h2>
+
+<!-- Formulário para editar o nome e status do projeto -->
+<form action="/projeto/<%= projeto.nome %>/editar" method="POST" class="row g-3 mb-4">
+  
+  <!-- Campo nome do projeto -->
+  <div class="col-md-12">
+    <label for="nome"><%= lang.name %></label>
+    <input type="text" id="nome" name="nome" class="form-control" value="<%= projeto.nome %>" required>
+  </div>
+
+  <!-- Campo status do projeto -->
+  <div class="col-md-12">
+    <label for="status"><%= lang.status %></label>
+    <select id="status" name="status" class="form-select" required>
+      <option value="ativo" <%= projeto.status === 'ativo' ? 'selected' : '' %>><%= lang.active %></option>
+      <option value="finalizado" <%= projeto.status === 'finalizado' ? 'selected' : '' %>><%= lang.finished %></option>
+    </select>
+  </div>
+
+  <!-- Botão de enviar -->
+  <div class="col-md-12">
+    <button type="submit" class="btn btn-primary"><%= lang.save %></button>
+    <a href="/projetos" class="btn btn-secondary"><%= lang.cancel %></a>
+  </div>
+</form>

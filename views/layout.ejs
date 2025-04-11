@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="<%= config.DEFAULT_LOCALE || 'pt-br' %>">
+<head>
+  <meta charset="UTF-8">
+  <title>SmartExpense</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+    }
+
+    .sidebar .nav-link {
+      color: #333;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: #e9ecef;
+    }
+
+    .content {
+      flex-grow: 1;
+      padding: 2rem;
+      background-color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .content {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar p-3">
+    <h4 class="text-center mb-4"><%= lang.app_name %></h4>
+    <nav class="nav flex-column">
+      <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.projects || 'Projetos' %></span>
+      <a class="nav-link" href="/criar-projeto">➕ <%= lang.create_project || 'Criar novo projeto' %></a>
+      <a class="nav-link" href="/projetos">📋 <%= lang.in_progress || 'Em andamento' %></a>
+      <a class="nav-link" href="/projetos/finalizados">✅ <%= lang.finished || 'Finalizados' %></a>
+
+      <hr>
+
+      <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.templates || 'Templates' %></span>
+      <a class="nav-link" href="/templates/criar">➕ <%= lang.create_template || 'Criar template' %></a>
+      <a class="nav-link" href="/templates">📄 <%= lang.view_templates || 'Ver templates' %></a>
+
+      <hr>
+
+      <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.system || 'Sistema' %></span>
+      <a class="nav-link" href="/configuracoes">⚙️ <%= lang.settings || 'Configurações' %></a>
+
+    </nav>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="content">
+    <%- body %> 
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

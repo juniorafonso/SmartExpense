@@ -1,0 +1,33 @@
+<h1 class="mb-4"><%= lang.welcome_message %></h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <h2><%= lang.dashboard %></h2>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><%= lang.recent_projects %></h5>
+        <p class="card-text">
+          <!-- Aqui você pode listar os projetos recentes -->
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <h2><%= lang.actions_overview %></h2>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><%= lang.projects %></h5>
+        <p class="card-text">
+          <!-- Aqui você pode colocar as ações relacionadas aos projetos -->
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mb-4">
+  <a href="/criar-projeto" class="btn btn-success"><%= lang.create_project %></a>
+  <a href="/projetos" class="btn btn-primary"><%= lang.in_progress %></a>
+  <a href="/projetos/finalizados" class="btn btn-info"><%= lang.finished %></a>
+</div>
