@@ -1,21 +1,27 @@
 <div class="dropdown">
-    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-            data-bs-toggle="dropdown" aria-expanded="false">
-      <%= lang.actions || 'Actions' %>
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+            type="button"
+            id="paymentActionsDropdown-<%= payment.id %>"
+            data-bs-toggle="dropdown"
+            data-bs-container="body"   
+            data-bs-boundary="viewport" 
+            aria-expanded="false">
+        <%= lang.actions || 'Actions' %>
     </button>
-    <ul class="dropdown-menu">
-      <li>
-        <a class="dropdown-item" href="#" onclick="abrirModalEditar(<%= payment.id %>)">
-            <%= lang.edit || 'Edit' %>
-          </a>
-      </li>
-      <li>
-        <form action="/payments/<%= payment.id %>/delete" method="POST" style="display:inline;">
-          <button type="submit" class="dropdown-item text-danger delete-payment-button">
-            <%= lang.delete || 'Delete' %>
-          </button>
-        </form>
-      </li>
+    <!-- dropdown-menu-end alinha o menu à direita -->
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="paymentActionsDropdown-<%= payment.id %>">
+        <li>
+            <button class="dropdown-item" type="button" onclick="showEditModal('<%= payment.id %>')">
+                <i class="fas fa-edit me-1"></i> <%= lang.edit || 'Edit' %>
+            </button>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <form action="/payments/<%= payment.id %>/delete" method="POST" class="d-inline" onsubmit="return confirm('<%= lang.confirm_delete_payment_method || 'Are you sure you want to delete this payment method?' %>');">
+                <button type="submit" class="dropdown-item text-danger">
+                    <i class="fas fa-trash-alt me-1"></i> <%= lang.delete || 'Delete' %>
+                </button>
+            </form>
+        </li>
     </ul>
-  </div>
-  
+</div>

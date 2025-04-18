@@ -1,0 +1,21 @@
+
+<% if (locals.success_msg && locals.success_msg.length > 0) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= locals.success_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<% if (locals.error_msg && locals.error_msg.length > 0) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= locals.error_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<% if (locals.error && locals.error.length > 0) { %> <!-- Handle generic 'error' key as well -->
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= locals.error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>

@@ -1,34 +1,35 @@
+<!-- Settings Page Title -->
 <h1 class="mb-4"><%= lang.config_title || 'System Settings' %></h1>
 
-<form action="/configuracoes" method="POST" class="bg-white border rounded p-4" style="width: 100%;">
-  <div class="mb-3">
-    <label for="DEV_MODE" class="form-label"><%= lang.dev_mode || 'Dev Mode' %></label>
-    <select name="DEV_MODE" id="DEV_MODE" class="form-select">
-      <option value="true" <%= config.DEV_MODE ? 'selected' : '' %>><%= lang.dev_enabled || 'Enabled' %></option>
-      <option value="false" <%= !config.DEV_MODE ? 'selected' : '' %>><%= lang.dev_disabled || 'Disabled' %></option>
-    </select>
-  </div>
+<!-- Settings Form -->
+<form action="/settings" method="POST" class="bg-white border rounded p-4" style="width: 100%;">
 
+  <!-- Language Selection -->
   <div class="mb-3">
     <label for="DEFAULT_LOCALE" class="form-label"><%= lang.language || 'Language' %></label>
     <select class="form-select" id="DEFAULT_LOCALE" name="DEFAULT_LOCALE" required>
+      <!-- Options populated based on available languages, selected based on current config -->
       <option value="pt" <%= config.DEFAULT_LOCALE === 'pt' ? 'selected' : '' %>>Português</option>
       <option value="en" <%= config.DEFAULT_LOCALE === 'en' ? 'selected' : '' %>>English</option>
       <option value="fr" <%= config.DEFAULT_LOCALE === 'fr' ? 'selected' : '' %>>Français</option>
     </select>
   </div>
 
+  <!-- Currency Selection -->
   <div class="mb-3">
     <label for="DEFAULT_CURRENCY" class="form-label"><%= lang.currency || 'Currency' %></label>
     <select class="form-select" id="DEFAULT_CURRENCY" name="DEFAULT_CURRENCY" required>
+      <!-- Options populated based on available currencies, selected based on current config -->
       <option value="BRL" <%= config.DEFAULT_CURRENCY === 'BRL' ? 'selected' : '' %>>BRL</option>
       <option value="USD" <%= config.DEFAULT_CURRENCY === 'USD' ? 'selected' : '' %>>USD</option>
       <option value="EUR" <%= config.DEFAULT_CURRENCY === 'EUR' ? 'selected' : '' %>>EUR</option>
       <option value="CHF" <%= config.DEFAULT_CURRENCY === 'CHF' ? 'selected' : '' %>>CHF</option>
       <option value="GBP" <%= config.DEFAULT_CURRENCY === 'GBP' ? 'selected' : '' %>>GBP</option>
+      <!-- Add other currencies as needed -->
     </select>
   </div>
 
+  <!-- Form Actions -->
   <div class="d-flex justify-content-between">
     <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
   </div>

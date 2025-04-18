@@ -1,0 +1,354 @@
+<h1 class="mb-4">
+  <!-- Template Title -->
+  <span class="fw-bold"><%= lang.template || 'Template' %>:</span>
+  <!-- Display Template Name -->
+  <span id="template-name-text"><%= template.name %></span>
+  <!-- Edit Name Button (triggers modal) -->
+  <button class="btn btn-sm btn-link p-0 ms-2 text-decoration-none" data-bs-toggle="modal" data-bs-target="#editNameModal">✏️</button>
+</h1>
+
+<!-- Edit Template Name Modal -->
+<div class="modal fade" id="editNameModal" tabindex="-1" aria-labelledby="editNameModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Form to edit template name -->
+      <form action="/templates/<%= template.id %>/edit" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editNameModalLabel"><%= lang.edit_template_name || 'Edit Template Name' %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label for="templateNameInput" class="form-label"><%= lang.template_name || 'Template Name' %></label>
+          <!-- Input for new template name -->
+          <input type="text" id="templateNameInput" name="name" class="form-control" value="<%= template.name %>" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.cancel || 'Cancel' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Custom style for table borders -->
+<style>
+  table td, table th {
+    border: 1px solid #dee2e6 !important;
+  }
+</style>
+
+<!-- Action Buttons: Add Expense, Delete Template -->
+<div class="mb-3 text-start d-flex gap-2">
+  <button class="btn btn-success" onclick="showAddExpenseForm()"><%= lang.add_expense || 'Add Expense' %></button>
+  <form action="/templates/<%= template.id %>/delete" method="POST" onsubmit="return confirm('<%= lang.confirm_delete_template || 'Are you sure you want to delete this template and all its expenses?' %>');" style="display:inline;">
+    <button type="submit" class="btn btn-outline-danger"><%= lang.delete_template || 'Delete Template' %></button>
+  </form>
+</div>
+
+<!-- Table displaying template expenses -->
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width: 30%;"><%= lang.name || 'Name' %></th>
+      <th style="width: 10%;"><%= lang.creditor_name || 'Creditor Name' %></th>
+      <th style="width: 10%;"><%= lang.due_day || 'Due Day' %></th>
+      <th class="text-center" style="width: 10%;"><%= lang.type || 'Type' %></th>
+      <th style="width: 10%;">IBAN</th>
+      <th class="text-end" style="width: 10%;"><%= lang.amount || 'Amount' %></th>
+      <th class="text-center" style="width: 5%;"><%= lang.file || 'File' %></th>
+      <th class="text-center" style="width: 5%;"><%= lang.actions || 'Actions' %></th>
+      <th style="width: 10%;"><%= lang.notes || 'Notes' %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% let totalAmount = 0; %>
+    <!-- Loop through each expense in the template -->
+    <% expenses.forEach(expense => {
+         const amountValue = parseFloat(expense.amount) || 0;
+         totalAmount += amountValue;
+         // Find the creditor name using creditor_id
+         const creditor = creditors.find(c => c.id === expense.creditor_id);
+    %>
+      <tr>
+        <!-- Expense Details -->
+        <td><%= expense.name %></td>
+        <td><%= creditor ? creditor.name : (lang.no_creditor || 'No Creditor') %></td>
+        <td><%= lang.day || 'Day' %> <%= expense.day_of_month %></td>
+        <td class="text-center">
+          <!-- Display expense type (Fixed/One-time) -->
+          <%= expense.type === 'fixed' ? (lang.fixed || 'Fixed') : (lang.one_time || 'One-time') %>
+        </td>
+        <td><%= expense.iban %></td>
+        <td class="text-end"><%= config.DEFAULT_CURRENCY %> <%= amountValue.toFixed(2) %></td>
+        <td class="text-center">
+          <!-- Link to file if exists -->
+          <% if (expense.file) { %>
+            <a class="text-decoration-none" href="/uploads/<%= expense.file %>" target="_blank" title="<%= expense.file %>">💾</a>
+          <% } else { %>
+            🚫
+          <% } %>
+        </td>
+        <td class="text-center">
+          <!-- Actions Dropdown for each expense -->
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <%= lang.actions || 'Actions' %>
+            </button>
+            <ul class="dropdown-menu">
+              <!-- Edit Button (triggers modal) -->
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item"
+                  onclick="populateEditExpenseModal(this)"
+                  data-id="<%= expense.id %>"
+                  data-name="<%= expense.name %>"
+                  data-amount="<%= expense.amount %>"
+                  data-day="<%= expense.day_of_month %>"
+                  data-type="<%= expense.type %>"
+                  data-iban="<%= expense.iban || '' %>"
+                  data-notes="<%= expense.notes || '' %>"
+                  data-file="<%= expense.file || '' %>"
+                  data-creditor-id="<%= expense.creditor_id || '' %>"
+                ><%= lang.edit || 'Edit' %></button>
+              </li>
+              <!-- Delete Form -->
+              <li>
+                <form action="/templates/<%= template.id %>/expenses/<%= expense.id %>/delete" method="POST" class="d-inline" onsubmit="return confirm('<%= lang.confirm_delete_expense || 'Are you sure you want to delete this expense?' %>');">
+                  <button type="submit" class="dropdown-item text-danger"><%= lang.delete || 'Delete' %></button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </td>
+        <td><%= expense.notes %></td>
+      </tr>
+    <% }); %>
+    <!-- Display message if no expenses exist -->
+    <% if (expenses.length === 0) { %>
+        <tr>
+          <td colspan="9" class="text-center text-muted"><%= lang.no_expenses_in_template || 'No expenses added to this template yet.' %></td>
+        </tr>
+    <% } %>
+    <!-- Total Row -->
+    <tr class="bg-light fw-bold">
+      <td colspan="5"></td>
+      <td class="text-end"><%= config.DEFAULT_CURRENCY %> <%= totalAmount.toFixed(2) %></td>
+      <td colspan="3" class="text-start"><%= lang.total_value || 'Total Value' %></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Add Expense Modal/Form (Initially Hidden) -->
+<div id="addExpenseForm" class="position-fixed top-50 start-50 translate-middle bg-white border rounded shadow p-4" style="display:none; width: 40%; z-index: 1050; max-height: 90vh; overflow-y: auto;">
+  <h5 class="mb-3"><%= lang.add_expense || 'Add Expense' %></h5>
+  <!-- Form to add a new expense to the template -->
+  <form action="/templates/<%= template.id %>/expenses" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label"><%= lang.name || 'Name' %></label>
+      <input type="text" class="form-control" name="name" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.amount || 'Amount' %></label>
+      <input type="number" step="0.01" class="form-control" name="amount" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.day_of_month || 'Day of month' %></label>
+      <select name="day_of_month" class="form-select" required>
+        <% for (let i = 1; i <= 31; i++) { %>
+          <option value="<%= i %>"><%= i %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.type || 'Type' %></label>
+      <select class="form-select" name="type" required>
+        <option value="fixed"><%= lang.fixed || 'Fixed' %></option>
+        <option value="one-time"><%= lang.one_time || 'One-time' %></option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">IBAN</label>
+      <input type="text" class="form-control" name="iban">
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.notes || 'Notes' %></label>
+      <textarea class="form-control" name="notes"></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.file || 'File' %></label>
+      <input type="file" class="form-control" name="file">
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.creditor_name || 'Creditor Name' %></label>
+      <% if (creditors.length > 0) { %>
+        <select name="creditor_id" class="form-select">
+          <option value=""><%= lang.select_creditor || 'Select a creditor' %></option>
+          <% creditors.forEach(creditor => { %>
+            <option value="<%= creditor.id %>"><%= creditor.name %></option>
+          <% }) %>
+        </select>
+      <% } else { %>
+        <p class="text-muted"><%= lang.no_creditors_available || 'No creditors available.' %></p>
+      <% } %>
+    </div>
+    <div class="d-flex justify-content-between">
+      <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+      <button type="button" class="btn btn-outline-secondary" onclick="closeForms()"><%= lang.cancel || 'Cancel' %></button>
+    </div>
+  </form>
+</div>
+
+<!-- Edit Expense Modal/Form (Initially Hidden) -->
+<div id="editExpenseForm" class="position-fixed top-50 start-50 translate-middle bg-white border rounded shadow p-4" style="display:none; width: 40%; z-index: 1050; max-height: 90vh; overflow-y: auto;">
+  <h5 class="mb-3"><%= lang.edit || 'Edit' %> <%= lang.expense || 'Expense' %></h5>
+  <!-- Form to edit an existing template expense -->
+  <form method="POST" enctype="multipart/form-data"> <!-- Action set dynamically by JS -->
+    <input type="hidden" name="id"> <!-- Expense ID -->
+    <input type="hidden" name="delete_file" value="false"> <!-- Hidden field for file deletion flag -->
+    <div class="mb-3">
+      <label class="form-label"><%= lang.name || 'Name' %></label>
+      <input type="text" class="form-control" name="name" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.amount || 'Amount' %></label>
+      <input type="number" step="0.01" class="form-control" name="amount" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.day_of_month || 'Day of month' %></label>
+      <select name="day_of_month" class="form-select" required>
+        <% for (let i = 1; i <= 31; i++) { %>
+          <option value="<%= i %>"><%= i %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.type || 'Type' %></label>
+      <select class="form-select" name="type" required>
+        <option value="fixed"><%= lang.fixed || 'Fixed' %></option>
+        <option value="one-time"><%= lang.one_time || 'One-time' %></option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">IBAN</label>
+      <input type="text" class="form-control" name="iban">
+    </div>
+    <div class="mb-3">
+      <label class="form-label"><%= lang.notes || 'Notes' %></label>
+      <textarea class="form-control" name="notes"></textarea>
+    </div>
+    <!-- File Handling Section -->
+    <div class="mb-3" id="currentFileContainer" style="display: none;">
+      <label class="form-label"><%= lang.current_file || 'Current file' %>:</label>
+      <div class="d-flex justify-content-between align-items-center">
+        <a id="currentFileLink" href="#" target="_blank" class="text-decoration-none"></a>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeExistingFile()"><%= lang.remove || 'Remove' %></button>
+      </div>
+    </div>
+    <div class="mb-3" id="newFileInputContainer">
+      <label class="form-label"><%= lang.file || 'File' %></label>
+      <input type="file" class="form-control" name="file">
+    </div>
+    <!-- End File Handling Section -->
+    <div class="mb-3">
+      <label class="form-label"><%= lang.creditor_name || 'Creditor Name' %></label>
+      <% if (creditors.length > 0) { %>
+        <select name="creditor_id" class="form-select">
+          <option value=""><%= lang.select_creditor || 'Select a creditor' %></option>
+          <% creditors.forEach(creditor => { %>
+            <option value="<%= creditor.id %>"><%= creditor.name %></option> <!-- Selected logic removed, set by JS -->
+          <% }) %>
+        </select>
+      <% } else { %>
+        <p class="text-muted"><%= lang.no_creditors_available || 'No creditors available.' %></p>
+      <% } %>
+    </div>
+    <div class="d-flex justify-content-between">
+      <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+      <button type="button" class="btn btn-outline-secondary" onclick="closeForms()"><%= lang.cancel || 'Cancel' %></button>
+    </div>
+  </form>
+</div>
+
+<!-- JavaScript for Modal Handling -->
+<script>
+  // Function to display the 'Add Expense' form/modal
+  function showAddExpenseForm() {
+    const formContainer = document.getElementById('addExpenseForm');
+    formContainer.querySelector('form').reset(); // Reset form fields
+    formContainer.style.display = 'block';
+  }
+
+  // Function to populate and display the 'Edit Expense' form/modal
+  function populateEditExpenseModal(buttonElement) {
+    const formContainer = document.getElementById('editExpenseForm');
+    const form = formContainer.querySelector('form');
+    form.reset(); // Reset form fields first
+
+    // Get data from the button's data-* attributes
+    const id = buttonElement.dataset.id;
+    const name = buttonElement.dataset.name;
+    const amount = buttonElement.dataset.amount;
+    const day = buttonElement.dataset.day;
+    const type = buttonElement.dataset.type;
+    const iban = buttonElement.dataset.iban;
+    const notes = buttonElement.dataset.notes;
+    const file = buttonElement.dataset.file; // Get file name
+    const creditorId = buttonElement.dataset.creditorId;
+
+    // Set the form action dynamically
+    form.setAttribute('action', `/templates/<%= template.id %>/expenses/${id}/edit`);
+
+    // Populate form fields
+    form.querySelector('input[name="id"]').value = id;
+    form.querySelector('input[name="name"]').value = name;
+    form.querySelector('input[name="amount"]').value = amount;
+    form.querySelector('select[name="day_of_month"]').value = day;
+    form.querySelector('select[name="type"]').value = type; // Use 'fixed' or 'one-time'
+    form.querySelector('input[name="iban"]').value = iban || '';
+    form.querySelector('textarea[name="notes"]').value = notes || '';
+    form.querySelector('select[name="creditor_id"]').value = creditorId || '';
+    form.querySelector('input[name="delete_file"]').value = 'false'; // Reset delete flag
+
+    // File handling display logic
+    const currentFileContainer = document.getElementById('currentFileContainer');
+    const currentFileLink = document.getElementById('currentFileLink');
+    const newFileInputContainer = document.getElementById('newFileInputContainer');
+    const fileInput = newFileInputContainer.querySelector('input[name="file"]');
+
+    if (file) {
+      // If a file exists, show the current file info and hide the upload field
+      currentFileContainer.style.display = 'block';
+      currentFileLink.href = `/uploads/${file}`;
+      currentFileLink.textContent = file;
+      newFileInputContainer.style.display = 'none';
+      fileInput.value = ''; // Clear file input value
+    } else {
+      // If no file exists, hide the current file info and show the upload field
+      currentFileContainer.style.display = 'none';
+      newFileInputContainer.style.display = 'block';
+      fileInput.value = ''; // Clear file input value
+    }
+
+    // Display the modal/form
+    formContainer.style.display = 'block';
+  }
+
+  // Function to handle removing an existing file in the edit form
+  function removeExistingFile() {
+    // Hide current file info, show upload field
+    document.getElementById('currentFileContainer').style.display = 'none';
+    document.getElementById('newFileInputContainer').style.display = 'block';
+    // Clear the file input field
+    document.querySelector('#editExpenseForm input[name="file"]').value = '';
+    // Set the hidden input flag to tell the backend to delete the file
+    document.querySelector('#editExpenseForm input[name="delete_file"]').value = 'true';
+  }
+
+  // Function to hide both Add and Edit forms/modals
+  function closeForms() {
+    document.getElementById('addExpenseForm').style.display = 'none';
+    document.getElementById('editExpenseForm').style.display = 'none';
+  }
+</script>

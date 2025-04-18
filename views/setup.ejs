@@ -1,0 +1,60 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card mt-5">
+        <div class="card-body">
+          <!-- Setup Title -->
+          <h1 class="card-title text-center mb-4"><%= lang.app_name %> - <%= lang.initial_setup || 'Initial Setup' %></h1>
+          <!-- Setup Description -->
+          <p class="text-center text-muted mb-4"><%= lang.setup_admin_user || 'Create the first administrator account.' %></p>
+
+          <!-- Setup Form -->
+          <form action="/setup" method="POST">
+            <!-- Full Name Field -->
+            <div class="mb-3">
+              <label for="fullName" class="form-label"><%= lang.full_name || 'Full Name' %></label>
+              <input type="text" class="form-control" id="fullName" name="fullName" required>
+            </div>
+            <!-- Email Field -->
+            <div class="mb-3">
+              <label for="email" class="form-label"><%= lang.email || 'Email' %></label>
+              <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <!-- Username Field -->
+            <div class="mb-3">
+              <label for="username" class="form-label"><%= lang.username || 'Username' %></label>
+              <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <!-- Password Field -->
+            <div class="mb-3">
+              <label for="password" class="form-label"><%= lang.password || 'Password' %></label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <!-- Confirm Password Field -->
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label"><%= lang.confirm_password || 'Confirm Password' %></label>
+              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+            </div>
+
+            <!-- Error Message Display -->
+            <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+              <div class="alert alert-danger" role="alert">
+                <%= error_msg %> <!-- Display flash error message -->
+              </div>
+            <% } else if (typeof error !== 'undefined' && error) { %>
+               <!-- Fallback for direct error variable -->
+              <div class="alert alert-danger" role="alert">
+                <%= error %>
+              </div>
+            <% } %>
+
+            <!-- Submit Button -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary"><%= lang.create_admin || 'Create Admin Account' %></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

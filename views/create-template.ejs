@@ -1,0 +1,15 @@
+<h1 class="mb-4"><%= lang.create_template || 'Create Template' %></h1>
+
+<!-- Form to create a new template -->
+<form action="/templates" method="POST" class="bg-white border rounded p-4" style="width: 100%;">
+  <div class="mb-3">
+    <!-- Template Name Input -->
+    <label for="name" class="form-label"><%= lang.template_name || 'Template Name' %></label>
+    <input type="text" class="form-control" id="name" name="name" placeholder="<%= lang.enter_template_name || 'Enter template name' %>" required>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex justify-content-between">
+    <button type="submit" class="btn btn-primary"><%= lang.create || 'Create' %></button>
+  </div>
+</form>

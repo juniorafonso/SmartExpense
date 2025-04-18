@@ -1,41 +1,62 @@
 <h1 class="mb-4">📄 <%= lang.templates || 'Templates' %></h1>
+
+<!-- Button to navigate to create template page -->
+<a href="/templates/create" class="btn btn-primary" style="margin-bottom: 15px;"><%= lang.create_template || 'Create Template' %></a>
+
+<!-- Template List Container -->
 <div class="bg-white border rounded p-3 mb-4">
-<table class="table ">
-  <thead>
-    <tr>
-      <th style="width: 70%;"><%= lang.name %></th>
-      <th style="width: 20%;" class="text-center"><%= lang.expenses || 'Expenses' %></th>
-      <th style="width: 10%;" class="text-center"></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% templates.forEach(template => { %>
+  <table class="table">
+    <thead>
       <tr>
-        <td><%= template.nome %></td>
-        <td class="text-center"><%= template.despesasCount %></td>
-        <td class="text-center">
-          <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <%= lang.actions || 'Actions' %>
-            </button>
-            <ul class="dropdown-menu">
-              <li>
-                <a class="dropdown-item" href="/templates/<%= template.id %>">
-                  <%= lang.edit || 'Edit' %>
-                </a>
-              </li>
-              <li>
-                <form action="/templates/<%= template.id %>/delete" method="POST" style="display:inline;">
-                  <button type="submit" class="dropdown-item text-danger">
-                    <%= lang.delete || 'Delete' %>
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </div>
-        </td>
+        <!-- Template Name Column -->
+        <th style="width: 70%;"><%= lang.name || 'Name' %></th>
+        <!-- Expense Count Column -->
+        <th style="width: 20%;" class="text-center"><%= lang.expenses || 'Expenses' %></th>
+        <!-- Actions Column -->
+        <th style="width: 10%;" class="text-center"></th>
       </tr>
-    <% }); %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <!-- Loop through each template -->
+      <% templates.forEach(template => { %>
+        <tr>
+          <!-- Display template name -->
+          <td><%= template.name %></td>
+          <!-- Display expense count -->
+          <td class="text-center"><%= template.expenseCount %></td>
+          <!-- Actions Dropdown -->
+          <td class="text-center">
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <%= lang.actions || 'Actions' %>
+              </button>
+              <ul class="dropdown-menu">
+                <!-- Edit Link -->
+                <li>
+                  <a class="dropdown-item" href="/templates/<%= template.id %>">
+                    <%= lang.edit || 'Edit' %>
+                  </a>
+                </li>
+                <!-- Delete Form -->
+                <li>
+                  <form action="/templates/<%= template.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('<%= lang.confirm_delete_template || 'Are you sure you want to delete this template and all its expenses?' %>');">
+                    <button type="submit" class="dropdown-item text-danger">
+                      <%= lang.delete || 'Delete' %>
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+      <% }); %>
+      <!-- Display message if no templates exist -->
+      <% if (templates.length === 0) { %>
+        <tr>
+          <td colspan="3" class="text-center text-muted"><%= lang.no_templates_found || 'No templates found.' %></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
 </div>
+

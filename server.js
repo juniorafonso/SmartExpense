@@ -1,764 +1,295 @@
-let DEFAULT_LOCALE;
+require('dotenv').config(); // Load variables from .env into process.env -> ADDED AT THE TOP
 
-// server.js
+// =============================================================================
+// Essential Imports
+// =============================================================================
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const multer = require('multer');
-const expressLayouts = require('express-ejs-layouts');
+const expressLayouts = require('express-ejs-layouts'); // <-- 1. Require the module
 const fs = require('fs');
-const lang = require('./lang.json');
-const config = require('./config');
-DEFAULT_LOCALE = ['pt', 'en', 'fr'].includes(config.DEFAULT_LOCALE)
+const bcrypt = require('bcrypt');
+const flash = require('connect-flash'); // Import connect-flash
+
+// =============================================================================
+// Configuration & Constants from .env and config.js
+// =============================================================================
+
+// --- Variables from .env ---
+const PORT = process.env.PORT || 3000; // Use port from .env or 3000 as fallback
+const sessionSecret = process.env.SESSION_SECRET;
+const dbPath = process.env.DATABASE_PATH || './db.sqlite'; // Use path from .env or './db.sqlite'
+const NODE_ENV = process.env.NODE_ENV || 'development'; // 'development' or 'production'
+const DEV_MODE = NODE_ENV === 'development'; // Derive DEV_MODE directly from NODE_ENV
+
+// Check if SESSION_SECRET is defined in .env
+if (!sessionSecret) {
+    console.error("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.error("FATAL ERROR: SESSION_SECRET not defined in the .env file!");
+    console.error("Generate a secure key and add it to your .env file.");
+    console.error("Example: SESSION_SECRET=\"a_very_long_and_secure_random_string\"");
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    process.exit(1); // Abort initialization if the secret key is not defined
+}
+
+// --- Load config.js (for non-sensitive/non-environment settings) ---
+let config;
+let lang;
+
+function loadConfigAndLang() {
+    try {
+        // Clear cache to ensure fresh require
+        delete require.cache[require.resolve('./config')];
+        config = require('./config');
+    } catch (e) {
+        console.warn("config.js file not found or invalid. Using default values (except DEV_MODE).");
+        // DEV_MODE now comes from NODE_ENV, no longer set here as primary fallback
+        config = { DEFAULT_LOCALE: 'en', DEFAULT_CURRENCY: 'USD' };
+    }
+    try {
+        // Clear cache for lang.json as well
+        delete require.cache[require.resolve('./lang.json')];
+        lang = require('./lang.json');
+    } catch (e) {
+        console.error("Error loading lang.json:", e);
+        // Provide a minimal fallback language object
+        lang = { en: { error_generic: "An error occurred." } };
+    }
+}
+
+loadConfigAndLang(); // Initial load
+
+// --- Derived Constants and Global Variables ---
+const saltRounds = 10; // bcrypt salt rounds
+
+// Validate and set the default locale globally (prioritize config.js, fallback 'en')
+let DEFAULT_LOCALE = ['pt', 'en', 'fr'].includes(config.DEFAULT_LOCALE)
   ? config.DEFAULT_LOCALE
   : 'en';
 
+// Function to get the current default locale
+const getDefaultLocale = () => DEFAULT_LOCALE;
+// Function to set the current default locale
+const setDefaultLocale = (newLocale) => {
+    if (['pt', 'en', 'fr'].includes(newLocale)) {
+        DEFAULT_LOCALE = newLocale;
+    }
+};
 
-const DEV_MODE = config.DEV_MODE;
-
-
-function requireLogin(req, res, next) {
-  if (!DEV_MODE && !req.session.user) {
-    return res.redirect('/login');
-  }
-  next();
+// Function to reload config.js and lang.json (no longer directly affects DEV_MODE)
+function updateConfigAndGlobals() {
+    loadConfigAndLang();
+    // Update DEFAULT_LOCALE based on the reloaded config
+    DEFAULT_LOCALE = ['pt', 'en', 'fr'].includes(config.DEFAULT_LOCALE) ? config.DEFAULT_LOCALE : 'en';
+    console.log("Configuration (config.js) and language (lang.json) reloaded.");
+    // DEV_MODE is based on NODE_ENV and doesn't change dynamically here
+    console.log(`Development Mode (DEV_MODE based on NODE_ENV): ${DEV_MODE}`);
+    console.log(`New DEFAULT_LOCALE (from config.js): ${DEFAULT_LOCALE}`);
 }
 
-const app = express();
-const PORT = 3000;
-app.use((req, res, next) => {
-  const langCode = (req.session && req.session.lang) || config.DEFAULT_LOCALE || 'en';
+// Function to get the current config (from config.js)
+const getConfig = () => config;
 
-  // Fallback se o idioma for inválido
-  const idiomaValido = ['pt', 'en', 'fr'].includes(langCode) ? langCode : 'en';
-
-  // Salva na sessão, caso ainda não tenha
-  if (req.session) {
-    req.session.lang = idiomaValido;
+// Multer Configuration (File Uploads)
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = path.join(__dirname, 'uploads');
+    fs.mkdirSync(uploadPath, { recursive: true }); // Create directory if it doesn't exist
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    // Create a unique and safe filename
+    cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'));
   }
+});
+const upload = multer({ storage: storage });
 
-  // Passa o idioma e config para as views
-  res.locals.lang = lang[idiomaValido];
-  res.locals.config = config;
+// =============================================================================
+// Global Variables (Setup Check)
+// =============================================================================
+let needsSetup = false; // Controls the need for initial setup
+const getNeedsSetup = () => needsSetup; // Function to get the state
+const setNeedsSetup = (value) => { needsSetup = !!value; }; // Function to set the state
 
+// =============================================================================
+// Database Connection & Initial Setup Check
+// =============================================================================
+// Use dbPath from .env
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error(`Fatal error connecting to the database at '${dbPath}':`, err.message);
+    process.exit(1);
+  }
+  console.log(`Connected to SQLite database at '${dbPath}'.`);
+
+  // Check if any user exists in the 'users' table (logic unchanged)
+  db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
+    if (err) {
+      // If the users table doesn't exist, assume setup is needed
+      if (err.message.includes('no such table')) {
+          console.warn("Table 'users' not found. Initial setup is required.");
+          setNeedsSetup(true);
+      } else {
+          console.error("Error checking for existing users:", err.message);
+          setNeedsSetup(true); // Assume setup in case of unknown error
+          console.warn("Could not check for users. Assuming initial setup is required.");
+      }
+    } else if (row.count === 0) {
+      setNeedsSetup(true);
+      console.log("No users found. Initial setup is required.");
+    } else {
+      setNeedsSetup(false);
+      console.log("Users found. Initial setup is not required.");
+    }
+  });
+});
+
+// =============================================================================
+// Express App Initialization
+// =============================================================================
+const app = express();
+
+// View Engine (EJS) and Layouts Configuration
+app.set('view engine', 'ejs');
+app.use(expressLayouts);
+// app.set('layout', 'layout'); // <-- COMENTE ESTA LINHA
+app.set('views', path.join(__dirname, 'views'));
+
+// =============================================================================
+// Import Middlewares
+// =============================================================================
+const localsMiddleware = require('./middleware/locals');
+const setupMiddleware = require('./middleware/setup');
+// Pass the DEV_MODE derived from NODE_ENV to the authentication middleware
+const authMiddlewareFunctions = require('./middleware/auth')(DEV_MODE);
+// Debug logs to verify middleware functions (can be removed later)
+// console.log('DEBUG: authMiddlewareFunctions object:', authMiddlewareFunctions);
+// console.log('DEBUG: typeof authMiddlewareFunctions.ensureAuthenticated:', typeof authMiddlewareFunctions?.ensureAuthenticated);
+
+// =============================================================================
+// Express App Configuration (Middleware Pipeline)
+// =============================================================================
+
+// Session Configuration
+app.use(session({
+  secret: sessionSecret, // Use the variable loaded from .env
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: !DEV_MODE, // Secure cookies only if NOT in DEV_MODE (i.e., in production)
+    httpOnly: true,
+    sameSite: 'lax', // Recommended for security
+    maxAge: 1000 * 60 * 60 * 24 // 1 day expiration
+   }
+}));
+
+// Connect-Flash Middleware (AFTER session)
+app.use(flash());
+
+// Global Flash Message Variables Middleware (BEFORE routes)
+app.use((req, res, next) => {
+  // Make flash messages available in templates
+  res.locals.success_msg = req.flash('success'); // Or the key you use ('success_msg', 'success')
+  res.locals.error_msg = req.flash('error');   // Or the key you use ('error_msg', 'error')
   next();
 });
 
-
-app.use(session({
-  secret: 'smartexpense_secret',
-  resave: false,
-  saveUninitialized: true
-}));
-
+// Body Parsers (for form data and JSON)
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'));
+
+// Serve Static Files (public assets, bootstrap, uploads)
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
+app.use('/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/js')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.set('view engine', 'ejs');
-app.use(expressLayouts);
-app.set('layout', 'layout');
-app.set('views', path.join(__dirname, 'views'));
 
-const db = new sqlite3.Database('./db.sqlite');
+// Serve jQuery from node_modules
+app.use('/js/jquery', express.static(path.join(__dirname, 'node_modules/jquery/dist')));
+// Serve Bootstrap Table JS and CSS from node_modules
+app.use('/libs/bootstrap-table', express.static(path.join(__dirname, 'node_modules/bootstrap-table/dist')));
 
+// Serve store.js
+app.use('/js/store', express.static(path.join(__dirname, 'node_modules/store-js/dist')));
+// Serve jquery-resizable-columns JS and CSS
+app.use('/libs/jquery-resizable-columns', express.static(path.join(__dirname, 'node_modules/jquery-resizable-columns/dist')));
 
+// Language and Local Variables Middleware (AFTER session and global flash)
+// Pass the DEV_MODE derived from NODE_ENV
+app.use(localsMiddleware.setLocals(config, lang, DEV_MODE, getDefaultLocale));
 
-app.get('/configuracoes', requireLogin, (req, res) => {
-  res.render('configuracoes', { config });
-});
+// Setup Check Middleware (BEFORE protected routes)
+app.use(setupMiddleware.checkSetup(getNeedsSetup)); // Pass the function to get needsSetup state
 
-app.post('/configuracoes', requireLogin, (req, res) => {
-  const { DEV_MODE, DEFAULT_LOCALE: novoLocale, DEFAULT_CURRENCY } = req.body;
+// =============================================================================
+// Import Routes
+// =============================================================================
+// Pass necessary dependencies to route modules
+// (authMiddlewareFunctions already includes the correct DEV_MODE)
+const indexRoutes = require('./routes/index')(authMiddlewareFunctions);
+const authRoutes = require('./routes/auth')(db, bcrypt, saltRounds, getNeedsSetup, setNeedsSetup, lang, getDefaultLocale, setDefaultLocale);
+const projectRoutes = require('./routes/projects')(db, upload, getConfig, authMiddlewareFunctions);
+const templateRoutes = require('./routes/templates')(db, upload, authMiddlewareFunctions);
+const creditorRoutes = require('./routes/creditors')(db, authMiddlewareFunctions);
+const paymentRoutes = require('./routes/payments')(db, authMiddlewareFunctions);
+// Pass functions to get/update config (from config.js)
+const settingRoutes = require('./routes/settings')(getConfig, updateConfigAndGlobals, lang, getDefaultLocale, authMiddlewareFunctions);
+const userRoutes = require('./routes/users')(db, authMiddlewareFunctions, saltRounds);
 
-  req.session.lang = novoLocale || 'en';
+// =============================================================================
+// Mount Routes
+// =============================================================================
+app.use('/', indexRoutes); // Handles '/', '/dashboard' etc.
+app.use('/', authRoutes); // Handles '/login', '/logout', '/setup'
 
-  const novoConfig = {
-    DEV_MODE: DEV_MODE === 'true',
-    DEFAULT_LOCALE: novoLocale,
-    DEFAULT_CURRENCY,
-    USERS: config.USERS
-  };
+// Feature Routes (ensure paths are correct and consistent)
+app.use('/projects', projectRoutes); // Handles '/projects', '/projects/create', '/projects/:name', etc.
+app.use('/project', projectRoutes); // Handles '/project/:name/expenses', etc. (Consider consolidating under /projects if possible)
 
-  const conteudo = `module.exports = ${JSON.stringify(novoConfig, null, 2)};\n`;
-  fs.writeFileSync('./config.js', conteudo, 'utf8');
+app.use('/templates', templateRoutes); // Handles '/templates', '/templates/:id', etc.
+app.use('/creditors', creditorRoutes); // Handles '/creditors', etc.
+app.use('/payments', paymentRoutes); // Handles '/payments', etc.
+app.use('/settings', settingRoutes); // Handles '/settings'
+app.use('/users', userRoutes); // Handles '/users', etc.
 
-  // Recarrega o novo config
-  delete require.cache[require.resolve('./config')];
-  const novoConfigRecarregado = require('./config');
-
-  // Atualiza DEFAULT_LOCALE global
-  DEFAULT_LOCALE = ['pt', 'en', 'fr'].includes(novoConfigRecarregado.DEFAULT_LOCALE)
-    ? novoConfigRecarregado.DEFAULT_LOCALE
-    : 'en';
-
-  // Atualiza o objeto config
-  Object.keys(config).forEach(k => delete config[k]);
-  Object.assign(config, novoConfigRecarregado);
-
-  // Só força login se DEV_MODE foi DESATIVADO
-  if (!novoConfigRecarregado.DEV_MODE) {
-    req.session.destroy(() => res.redirect('/login'));
-  } else {
-    res.redirect('/configuracoes');
-  }
-});
-
-
-// Multer para upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage });
-
-const USERS = config.USERS
-
-// Login
-app.get('/login', (req, res) => {
-  res.render('login', { error: null, lang: res.locals.lang, layout: 'login_layout' });
-
-});
-
-app.post('/login', (req, res) => {
-  const { usuario, senha, language } = req.body;
-  // Lógica de autenticação
-  if (config.USERS[usuario] === senha) {
-    req.session.user = usuario;
-    req.session.lang = language; // Define o idioma na sessão
-    res.redirect('/');
-  } else {
-    res.render('login', { error: true, lang: res.locals.lang, layout: 'login_layout' });
-  }
-});
-
-// Página inicial
-app.get('/', requireLogin, (req, res) => {
-  res.render('index', { user: req.session.user });
-});
-
-// Criação e edição de projetos
-app.get('/criar-projeto', requireLogin, (req, res) => {
-  db.all('SELECT * FROM templates', (err, templates) => {
-    if (err) console.error(err);
-    res.render('criar-projeto', { templates, lang: res.locals.lang });
+// =============================================================================
+// Error Handling Middleware (Should be last)
+// =============================================================================
+// 404 Not Found Handler
+app.use((req, res, next) => {
+  res.status(404).render('error', {
+      title: '404 - Not Found',
+      message: res.locals.lang?.error_404_message || `The page you requested (${req.originalUrl}) was not found.`,
+      user: req.session?.user, // Pass user info to the error page layout
+      lang: res.locals.lang // Pass lang object
+      // layout: 'layout' // Explicitly set layout if needed, though default should work
   });
 });
 
-app.post('/criar-projeto', requireLogin, (req, res) => {
-  const { nome, template } = req.body;
-  if (!nome) return res.redirect('/criar-projeto');
-
-  db.run('INSERT INTO projetos (nome, status) VALUES (?, ?)', [nome, 'ativo'], function (err) {
-    if (err) {
-      console.error('Erro ao criar o projeto:', err.message);
-      return res.redirect('/criar-projeto');
-    }
-
-    if (template && template !== '') {
-      db.all('SELECT * FROM template_despesas WHERE template_id = ?', [template], (err, despesas) => {
-        if (err) return console.error(err);
-
-        const now = new Date(); // data atual como fallback
-        const anoAtual = now.getFullYear();
-        const mesAtual = now.getMonth() + 1; // 1 a 12
-
-        const stmt = db.prepare('INSERT INTO despesas (nome, valor, data, tipo, arquivo, iban, observacoes, projeto, status_pagamento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-
-        despesas.forEach(d => {
-          const dia = d.dia_do_mes || 1; // fallback para dia 1 se não vier preenchido
-          const dataReal = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-
-          stmt.run(d.nome, d.valor, dataReal, d.tipo, d.arquivo, d.iban, d.observacoes, nome, 'unpaid');
-        });
-        stmt.finalize(() => res.redirect(`/projeto/${nome}`));
-      });
-    } else {
-      res.redirect(`/projeto/${nome}`);
-    }
+// Generic Error Handler (500)
+app.use((err, req, res, next) => {
+  console.error("Unhandled Error:", err.stack || err.message || err); // Log the full error
+  res.status(err.status || 500).render('error', {
+      title: 'Error',
+      message: res.locals.lang?.error_generic || 'An unexpected error occurred.',
+      // Show detailed error only in development mode for security
+      errorDetail: DEV_MODE ? (err.stack || err.message) : undefined,
+      user: req.session?.user, // Pass user info
+      lang: res.locals.lang // Pass lang object
+      // layout: 'layout' // Explicitly set layout if needed
   });
 });
 
-// Projetos
-app.get('/projetos', requireLogin, (req, res) => {
-  db.all('SELECT * FROM projetos WHERE status = ?', ['ativo'], (err, rows) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send('Erro ao buscar projetos ativos');
-    }
-    res.render('projetos', { projetos: rows });
-  });
-});
-
-app.get('/projetos/finalizados', requireLogin, (req, res) => {
-  db.all('SELECT * FROM projetos WHERE status = ?', ['finalizado'], (err, rows) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send('Erro ao buscar projetos finalizados');
-    }
-    res.render('projetos-finalizados', { projetos: rows });
-  });
-});
-
-app.post('/projetos/:nome/delete', requireLogin, (req, res) => {
-  const nome = req.params.nome;
-  db.run('DELETE FROM despesas WHERE projeto = ?', [nome], (err) => {
-    if (err) return res.status(500).send('Erro ao deletar despesas');
-    db.run('DELETE FROM projetos WHERE nome = ?', [nome], (err2) => {
-      if (err2) return res.status(500).send('Erro ao deletar projeto');
-      res.redirect('/projetos');
-    });
-  });
-});
-
-// Edição de projeto
-app.get('/projeto/:nome/editar', requireLogin, (req, res) => {
-  const nomeProjeto = req.params.nome;
-  db.get('SELECT * FROM projetos WHERE nome = ?', [nomeProjeto], (err, projeto) => {
-    if (err) return res.status(500).send('Erro ao buscar projeto');
-    if (!projeto) return res.status(404).send('Projeto não encontrado');
-    res.render('editar-projeto', { projeto });
-  });
-});
-
-app.post('/projeto/:nome/editar', requireLogin, (req, res) => {
-  const { nome, status } = req.body;
-  const { nome: oldNome } = req.params;
-  db.run('UPDATE projetos SET nome = ?, status = ? WHERE nome = ?', [nome, status, oldNome], (err) => {
-    if (err) return res.status(500).send('Erro ao atualizar projeto');
-    res.redirect('/projetos');
-  });
-});
-
-// Despesas
-app.get('/projeto/:nome', requireLogin, (req, res) => {
-  const nomeProjeto = req.params.nome;
-  db.all('SELECT * FROM despesas WHERE projeto = ?', [nomeProjeto], (err, despesas) => {
-    if (err) console.error(err);
-    res.render('projeto', { user: req.session.user, projeto: nomeProjeto, despesas });
-  });
-});
-
-app.post('/projeto/:nome/despesas', requireLogin, upload.single('arquivo'), (req, res) => {
-  const { nome, valor, data, tipo, iban, observacoes } = req.body;
-  const arquivo = req.file ? req.file.filename : null;
-  const projeto = req.params.nome;
-  db.run(
-    `INSERT INTO despesas (nome, valor, data, tipo, arquivo, iban, observacoes, projeto, status_pagamento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [nome, valor, data, tipo, arquivo, iban, observacoes, projeto, 'unpaid'],
-    (err) => {
-      if (err) console.error(err);
-      res.redirect(`/projeto/${projeto}`);
-    }
-  );
-});
-
-app.post('/projeto/:nome/despesas/:id/pagar', requireLogin, (req, res) => {
-  const { nome, id } = req.params;
-  db.run('UPDATE despesas SET status_pagamento = ? WHERE id = ?', ['paid', id], (err) => {
-    if (err) return res.status(500).send('Erro ao atualizar despesa');
-    res.redirect(`/projeto/${nome}`);
-  });
-});
-
-app.post('/projeto/:nome/despesas/:id/delete', requireLogin, (req, res) => {
-  const { nome, id } = req.params;
-  db.run('DELETE FROM despesas WHERE id = ?', [id], (err) => {
-    if (err) console.error(err);
-    res.redirect(`/projeto/${nome}`);
-  });
-});
-
-// Templates
-app.get('/templates', requireLogin, (req, res) => {
-  db.all('SELECT * FROM templates', (err, templates) => {
-    if (err) return res.status(500).send('Erro ao buscar templates');
-
-    if (templates.length === 0) {
-      return res.render('templates', { templates: [] }); // <- aqui resolve
-    }
-
-    const templatesComDespesas = [];
-    let countCompleted = 0;
-
-    templates.forEach((template) => {
-      db.get('SELECT COUNT(*) AS total FROM template_despesas WHERE template_id = ?', [template.id], (err, row) => {
-        if (err) return res.status(500).send('Erro ao contar despesas');
-        template.despesasCount = row.total;
-        templatesComDespesas.push(template);
-        countCompleted++;
-        if (countCompleted === templates.length) {
-          res.render('templates', { templates: templatesComDespesas });
-        }
-      });
-    });
-  });
-});
-
-
-app.get('/templates/criar', requireLogin, (req, res) => {
-  res.render('template-criar');
-});
-
-app.post('/templates', requireLogin, (req, res) => {
-  const { nome } = req.body;
-  db.run('INSERT INTO templates (nome) VALUES (?)', [nome], (err) => {
-    if (err) console.error(err);
-    res.redirect('/templates');
-  });
-});
-
-app.get('/templates/:id', requireLogin, (req, res) => {
-  const id = req.params.id;
-  db.get('SELECT * FROM templates WHERE id = ?', [id], (err, template) => {
-    if (err || !template) return res.status(500).send('Erro ao buscar o template');
-    db.all('SELECT * FROM template_despesas WHERE template_id = ?', [id], (err2, despesas) => {
-      if (err2) return res.status(500).send('Erro ao buscar despesas');
-      res.render('template-editar', { template, despesas });
-    });
-  });
-});
-
-app.post('/templates/:id/despesas', requireLogin, upload.single('arquivo'), (req, res) => {
-  const id = req.params.id;
-  const { nome, valor, dia_do_mes, tipo, iban, observacoes } = req.body;
-  const arquivo = req.file ? req.file.filename : null;
-  db.run(
-    `INSERT INTO template_despesas (template_id, nome, valor, tipo, iban, observacoes, arquivo, status_pagamento, dia_do_mes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, nome, valor, tipo, iban, observacoes, arquivo, 'unpaid', dia_do_mes],
-    (err) => {
-      if (err) console.error(err);
-      res.redirect(`/templates/${id}`);
-    }
-  );
-});
-
-app.post('/templates/:templateId/despesas/:id/delete', requireLogin, (req, res) => {
-  const { templateId, id } = req.params;
-  db.run('DELETE FROM template_despesas WHERE id = ?', [id], (err) => {
-    if (err) console.error(err);
-    res.redirect(`/templates/${templateId}`);
-  });
-});
-
-app.post('/templates/:id/delete', requireLogin, (req, res) => {
-  const id = req.params.id;
-  db.run('DELETE FROM template_despesas WHERE template_id = ?', [id], (err1) => {
-    if (err1) console.error(err1);
-    db.run('DELETE FROM templates WHERE id = ?', [id], (err2) => {
-      if (err2) console.error(err2);
-      res.redirect('/templates');
-    });
-  });
-});
-
-// Modificação de despesas
-app.get('/projeto/:nome/despesa/:id/editar', requireLogin, (req, res) => {
-  const { nome, id } = req.params;
-  db.get('SELECT * FROM despesas WHERE id = ?', [id], (err, despesa) => {
-    if (err || !despesa) return res.status(500).send('Erro ao buscar despesa');
-    res.render('modificar-despesa', { despesa, projeto: nome });
-  });
-});
-
-app.post('/projeto/:nome/despesa/:id/editar', requireLogin, upload.single('arquivo'), (req, res) => {
-  const { nome, valor, data, tipo, iban, observacoes, deletar_arquivo } = req.body;
-  const { id } = req.params;
-  const novoArquivo = req.file ? req.file.filename : null;
-
-  // Primeiro, buscamos o arquivo antigo (se existir)
-  db.get('SELECT arquivo FROM despesas WHERE id = ?', [id], (err, row) => {
-    if (err || !row) return res.status(500).send('Erro ao buscar despesa');
-
-    const arquivoAntigo = row.arquivo;
-    let arquivoFinal = arquivoAntigo;
-
-    if (deletar_arquivo === 'true') {
-      // Se o usuário pediu para deletar o arquivo antigo
-      if (arquivoAntigo) {
-        const caminho = path.join(__dirname, 'uploads', arquivoAntigo);
-        fs.unlink(caminho, (err) => {
-          if (err) console.error('Erro ao deletar arquivo antigo:', err.message);
-        });
-      }
-      arquivoFinal = null;
-    }
-
-    if (novoArquivo) {
-      // Novo upload substitui o antigo
-      arquivoFinal = novoArquivo;
-    }
-
-    db.run(
-      `UPDATE despesas SET nome = ?, valor = ?, data = ?, tipo = ?, arquivo = ?, iban = ?, observacoes = ? WHERE id = ?`,
-      [nome, valor, data, tipo, arquivoFinal, iban, observacoes, id],
-      (err) => {
-        if (err) return res.status(500).send('Erro ao salvar a despesa');
-        res.redirect(`/projeto/${req.params.nome}`);
-      }
-    );
-  });
-});
-
-
-app.get('/templates/:templateId/despesa/:id/editar', requireLogin, (req, res) => {
-  const { templateId, id } = req.params;
-  db.get('SELECT * FROM template_despesas WHERE id = ?', [id], (err, despesa) => {
-    if (err || !despesa) return res.status(500).send('Erro ao buscar despesa');
-    res.render('modificar-despesa-template', { despesa, templateId });
-  });
-});
-
-app.post('/templates/:templateId/despesa/:id/editar', requireLogin, upload.single('arquivo'), (req, res) => {
-  const { nome, valor, dia_do_mes, tipo, iban, observacoes, deletar_arquivo } = req.body;
-  const { templateId, id } = req.params;
-  const novoArquivo = req.file ? req.file.filename : null;
-
-  db.get('SELECT arquivo FROM template_despesas WHERE id = ?', [id], (err, row) => {
-    if (err || !row) return res.status(500).send('Erro ao buscar despesa');
-
-    const arquivoAntigo = row.arquivo;
-    let arquivoFinal = arquivoAntigo;
-
-    if (deletar_arquivo === 'true') {
-      if (arquivoAntigo) {
-        const caminho = path.join(__dirname, 'uploads', arquivoAntigo);
-        fs.unlink(caminho, (err) => {
-          if (err) console.error('Erro ao deletar arquivo antigo:', err.message);
-        });
-      }
-      arquivoFinal = null;
-    }
-
-    if (novoArquivo) {
-      arquivoFinal = novoArquivo;
-    }
-
-    db.run(
-      `UPDATE template_despesas SET nome = ?, valor = ?, dia_do_mes = ?, tipo = ?, arquivo = ?, iban = ?, observacoes = ? WHERE id = ?`,
-      [nome, valor, dia_do_mes, tipo, arquivoFinal, iban, observacoes, id],
-      (err) => {
-        if (err) return res.status(500).send('Erro ao salvar a despesa');
-        res.redirect(`/templates/${templateId}`);
-      }
-    );
-  });
-});
-
-
-app.post('/templates/:id/editar', requireLogin, (req, res) => {
-  const { nome } = req.body; // Obtém o novo nome do template
-  const { id } = req.params; // Obtém o ID do template
-
-  db.run(
-    `UPDATE templates SET nome = ? WHERE id = ?`,
-    [nome, id], // Atualiza o nome no banco de dados
-    (err) => {
-      if (err) {
-        console.error('Erro ao editar o template:', err.message);
-        return res.status(500).send('Erro ao editar o template');
-      }
-      res.redirect(`/templates/${id}`); // Redireciona de volta para o template atualizado
-    }
-  );
-});
-
-app.post('/projeto/:nome/despesas/:id/unpaid', requireLogin, (req, res) => {
-  const { nome, id } = req.params;
-  db.run('UPDATE despesas SET status_pagamento = ? WHERE id = ?', ['unpaid', id], (err) => {
-    if (err) return res.status(500).send('Erro ao marcar como não pago');
-    res.redirect(`/projeto/${nome}`);
-  });
-});
-
-app.get('/payments', requireLogin, (req, res) => {
-  db.all('SELECT * FROM Payments', (err, payments) => {
-    if (err) {
-      console.error('Erro ao buscar métodos de pagamento:', err);
-      return res.status(500).send('Erro ao buscar métodos de pagamento.');
-    }
-    res.render('payments-methods', {
-      payments: payments,
-      countries: [], // deixamos vazio por enquanto
-      currencies: [], // idem
-      lang: req.session.language || 'en'
-    });
-  });
-});
-
-app.get('/payments/form-data', requireLogin, async (req, res) => {
-  try {
-    // Buscar países
-    const countriesRes = await fetch('https://restcountries.com/v3.1/all');
-    const countriesData = await countriesRes.json();
-    const countries = countriesData.map(country => ({
-      code: country.cca2,
-      name: country.name.common
-    })).sort((a, b) => a.name.localeCompare(b.name));
-
-    // Buscar moedas
-    const currenciesRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    const currenciesData = await currenciesRes.json();
-    const currencies = Object.keys(currenciesData.rates).map(code => ({
-      code: code,
-      name: code
-    })).sort((a, b) => a.code.localeCompare(b.code));
-
-    res.json({ countries, currencies });
-  } catch (error) {
-    console.error('Erro ao buscar dados do formulário:', error);
-    res.status(500).json({ countries: [], currencies: [] });
-  }
-});
-
-app.post('/payments', requireLogin, (req, res) => {
-  let {
-    tipo_pagamento,
-    nome,
-    banco,
-    id_conta,
-    tipo_conta,
-    moeda,
-    pais,
-    nome_cartao,
-    id_cartao,
-    moeda_dinheiro
-  } = req.body;
-
-  // Função segura para limpar campos
-  function sanitizeField(field) {
-    if (typeof field === 'object') {
-      try {
-        if (field.code) return String(field.code);
-        return Array.isArray(field) ? String(field[0]) : JSON.stringify(field);
-      } catch {
-        return '';
-      }
-    }
-    return String(field || '');
-  }
-
-  // Corrige campos com base na aba ativa
-  if (tipo_pagamento === 'cartao_credito') {
-    nome = sanitizeField(nome_cartao);
-    id_conta = sanitizeField(id_cartao);
-    banco = '';
-    tipo_conta = '';
-    pais = '';
-    moeda = '';
-  } else if (tipo_pagamento === 'dinheiro') {
-    nome = 'Cash';
-    banco = '';
-    id_conta = '';
-    tipo_conta = '';
-    pais = '';
-    moeda = sanitizeField(moeda_dinheiro);
-  } else if (tipo_pagamento === 'conta_bancaria') {
-    nome = sanitizeField(nome);
-    banco = sanitizeField(banco);
-    id_conta = sanitizeField(id_conta);
-    tipo_conta = sanitizeField(tipo_conta);
-    moeda = sanitizeField(moeda);
-    pais = sanitizeField(pais);
-  }
-
-  // Validação
-  if (tipo_pagamento === 'conta_bancaria') {
-    if (!nome || !banco || !id_conta || !tipo_conta || !moeda || !pais) {
-      return res.status(400).send('Please fill in all required fields for Bank Account.');
-    }
-  } else if (tipo_pagamento === 'cartao_credito') {
-    if (!nome || !id_conta) {
-      return res.status(400).send('Please fill in all required fields for Credit Card.');
-    }
-  } else if (tipo_pagamento === 'dinheiro') {
-    if (!moeda) {
-      return res.status(400).send('Please select a currency for Cash.');
-    }
-  } else {
-    return res.status(400).send('Invalid payment type.');
-  }
-
-  // Inserção no banco
-  db.run(
-    `INSERT INTO Payments (tipo_pagamento, nome, banco, id_conta, tipo_conta, moeda, pais) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [tipo_pagamento, nome, banco, id_conta, tipo_conta, moeda, pais],
-    (err) => {
-      if (err) {
-        console.error('Error creating payment method:', err);
-        return res.status(500).send('Failed to create payment method. Please try again later.');
-      }
-      console.log('Payment method successfully created!');
-      res.redirect('/payments');
-    }
-  );
-});
-
-app.post('/payments/:id/delete', requireLogin, (req, res) => {
-  const id = req.params.id;
-
-  db.run('DELETE FROM Payments WHERE id = ?', [id], (err) => {
-    if (err) {
-      console.error('Error deleting payment method:', err);
-      return res.status(500).send('Failed to delete payment method. Please try again later.');
-    }
-    console.log(`Payment method with ID ${id} deleted successfully.`);
-    res.redirect('/payments');
-  });
-});
-
-app.get('/payments/:id/edit', requireLogin, async (req, res) => {
-  const id = req.params.id;
-
-  db.get('SELECT * FROM Payments WHERE id = ?', [id], async (err, payment) => {
-    if (err || !payment) {
-      console.error('Erro ao buscar método de pagamento:', err);
-      return res.status(500).send('Erro ao carregar método de pagamento.');
-    }
-
-    try {
-      // Países
-      const countriesRes = await fetch('https://restcountries.com/v3.1/all');
-      const countriesData = await countriesRes.json();
-      const countries = countriesData.map(country => ({
-        code: country.cca2,
-        name: country.name.common
-      })).sort((a, b) => a.name.localeCompare(b.name));
-
-      // Moedas
-      const currenciesRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-      const currenciesData = await currenciesRes.json();
-      const currencies = Object.keys(currenciesData.rates).map(code => ({
-        code: code,
-        name: code
-      })).sort((a, b) => a.code.localeCompare(b.code));
-
-      res.render('payment-edit', {
-        payment,
-        countries,
-        currencies,
-        lang: req.session.language || 'en'
-      });
-    } catch (error) {
-      console.error('Erro ao carregar países e moedas:', error);
-      res.status(500).send('Erro ao preparar edição.');
-    }
-  });
-});
-
-app.get('/payments/:id/json', requireLogin, async (req, res) => {
-  const id = req.params.id;
-
-  db.get('SELECT * FROM Payments WHERE id = ?', [id], async (err, payment) => {
-    if (err || !payment) {
-      return res.status(404).json({ error: 'Payment method not found.' });
-    }
-
-    try {
-      // Países
-      const countriesRes = await fetch('https://restcountries.com/v3.1/all');
-      const countriesData = await countriesRes.json();
-      const countries = countriesData.map(c => ({
-        code: c.cca2,
-        name: c.name.common
-      })).sort((a, b) => a.name.localeCompare(b.name));
-
-      // Moedas
-      const currenciesRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-      const currenciesData = await currenciesRes.json();
-      const currencies = Object.keys(currenciesData.rates).map(code => ({
-        code,
-        name: code
-      })).sort((a, b) => a.code.localeCompare(b.code));
-
-      res.json({ payment, countries, currencies });
-    } catch (error) {
-      console.error('Erro ao buscar dados para edição:', error);
-      res.status(500).json({ error: 'Failed to fetch form data.' });
-    }
-  });
-});
-
-app.post('/payments/:id/edit', requireLogin, (req, res) => {
-  const id = req.params.id;
-  let {
-    tipo_pagamento,
-    nome,
-    banco,
-    id_conta,
-    tipo_conta,
-    moeda,
-    pais,
-    nome_cartao,
-    id_cartao,
-    moeda_dinheiro
-  } = req.body;
-
-  // Sanitização
-  function sanitizeField(field) {
-    if (typeof field === 'object') {
-      try {
-        if (field.code) return String(field.code);
-        return Array.isArray(field) ? String(field[0]) : JSON.stringify(field);
-      } catch {
-        return '';
-      }
-    }
-    return String(field || '');
-  }
-
-  if (tipo_pagamento === 'cartao_credito') {
-    nome = sanitizeField(nome_cartao);
-    id_conta = sanitizeField(id_cartao);
-    banco = '';
-    tipo_conta = '';
-    pais = '';
-    moeda = '';
-  } else if (tipo_pagamento === 'dinheiro') {
-    nome = 'Cash';
-    banco = '';
-    id_conta = '';
-    tipo_conta = '';
-    pais = '';
-    moeda = sanitizeField(moeda_dinheiro);
-  } else if (tipo_pagamento === 'conta_bancaria') {
-    nome = sanitizeField(nome);
-    banco = sanitizeField(banco);
-    id_conta = sanitizeField(id_conta);
-    tipo_conta = sanitizeField(tipo_conta);
-    pais = sanitizeField(pais);
-    moeda = sanitizeField(moeda);
-  }
-
-  db.run(
-    `UPDATE Payments SET nome = ?, banco = ?, id_conta = ?, tipo_conta = ?, moeda = ?, pais = ? WHERE id = ?`,
-    [nome, banco, id_conta, tipo_conta, moeda, pais, id],
-    (err) => {
-      if (err) {
-        console.error('Erro ao atualizar método de pagamento:', err);
-        return res.status(500).send('Erro ao atualizar método de pagamento.');
-      }
-      console.log(`Método de pagamento ${id} atualizado com sucesso.`);
-      res.redirect('/payments');
-    }
-  );
-});
-
-
-
-app.get('/logout', (req, res) => {
-  // Lógica para encerrar a sessão do usuário (ex: destruir a sessão)
-  req.session.destroy((err) => {
-    if (err) {
-      console.log(err);
-    }
-    // Redirecionar o usuário para a página de login
-    res.redirect('/login');
-  });
-});
-
-// Iniciar servidor
+// =============================================================================
+// Server Start
+// =============================================================================
+// Use PORT from .env
 app.listen(PORT, () => {
-  console.log(`SmartExpense rodando em http://localhost:${PORT}`);
+  console.log(`SmartExpense running at http://localhost:${PORT}`);
+  // Log environment details on startup
+  console.log(`Environment (NODE_ENV): ${NODE_ENV}`);
+  console.log(`Development Mode (DEV_MODE): ${DEV_MODE}`);
+  console.log(`Default Language (DEFAULT_LOCALE from config.js): ${DEFAULT_LOCALE}`);
 });

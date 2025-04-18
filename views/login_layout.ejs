@@ -1,38 +1,43 @@
 <!DOCTYPE html>
-<html lang="<%= config.DEFAULT_LOCALE || 'pt-br' %>">
+<!-- Set language based on configuration -->
+<html lang="<%= config.DEFAULT_LOCALE || 'en' %>">
 <head>
   <meta charset="UTF-8">
   <title>SmartExpense - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Link to local Bootstrap CSS -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Inline styles specific to the login page -->
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: #f8f9fa; /* Light gray background */
     }
     .card {
-      margin-top: 50px;
-      border: none;
-      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+      margin-top: 50px; /* Space from top */
+      border: none; /* Remove default border */
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05); /* Subtle shadow */
     }
     .card-title {
       font-weight: bold;
-      color: #343a40;
+      color: #343a40; /* Dark gray title */
     }
     .form-label {
-      color: #495057;
+      color: #495057; /* Medium gray label */
     }
     .btn-primary {
-      background-color: #007bff;
+      background-color: #007bff; /* Standard Bootstrap blue */
       border-color: #007bff;
     }
     .btn-primary:hover {
-      background-color: #0069d9;
+      background-color: #0069d9; /* Darker blue on hover */
       border-color: #0062cc;
     }
   </style>
 </head>
 <body>
+  <!-- Render the specific login/setup page content here -->
   <%- body %>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Link to local Bootstrap JS Bundle -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

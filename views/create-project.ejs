@@ -1,0 +1,28 @@
+<h1 class="mb-4">➕ <%= lang.new_project || 'New project' %></h1>
+
+<!-- Form to create a new project -->
+<form action="/projects/create" method="POST" class="bg-white border rounded p-4" style="width: 100%;">
+  <div class="mb-3">
+    <!-- Project Name Input -->
+    <label for="project_name" class="form-label"><%= lang.project_name || 'Project Name' %>*</label>
+    <input type="text" class="form-control" id="project_name" name="name" placeholder="<%= lang.enter_project_name || 'Enter project name...' %>" required>
+ 
+    <label for="template_select" class="form-label" style="margin-top: 5px;"><%= lang.template || 'Template' %></label>
+    <select class="form-select" id="template_select" name="template_id">
+      <option value="" selected><%= lang.select_template_optional || 'Select a template...' %></option>
+      <% if (templates && templates.length > 0) { %>
+          <% templates.forEach(template => { %>
+            <option value="<%= template.id %>"><%= template.name %></option>
+          <% }) %>
+      <% } else { %>
+          <option value="" disabled><%= lang.no_templates_available || 'No templates available' %></option>
+      <% } %>
+    </select>
+     <div class="form-text"><%= lang.template_help || 'If selected, expenses from the template will be added to the new project.' %></div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex justify-content-between">
+    <button type="submit" class="btn btn-primary"><%= lang.create || 'Create' %></button>
+  </div>
+</form>

@@ -1,0 +1,295 @@
+<h1>👥 <%= lang.users || 'Users' %></h1>
+
+<div class="mb-3 text-start d-flex gap-2">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <%= lang.add_user || 'Add User' %>
+    </button>
+</div>
+
+<%- include('partials/flash_messages') %>
+
+<!-- Users Table -->
+<div class="bg-white border rounded p-3 shadow-sm">
+    <% if (users && users.length > 0) { %>
+        <!-- Se houver usuários, mostra a div responsiva e a tabela -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" style="width: 5%;">ID</th>
+                        <th scope="col" style="width: 20%;"><%= lang.username || 'Username' %></th>
+                        <th scope="col" style="width: 25%;"><%= lang.email || 'Email' %></th>
+                        <th scope="col" style="width: 20%;"><%= lang.full_name || 'Full Name' %></th>
+                        <th scope="col" style="width: 10%;"><%= lang.password || 'Password' %></th> <!-- Placeholder Header -->
+                        <th scope="col" style="width: 10%;" class="text-center"><%= lang.role || 'Role' %></th>
+                        <th scope="col" style="width: 10%;" class="text-center"><%= lang.actions || 'Actions' %></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(usr => { %>
+                        <tr>
+                            <th scope="row"><%= usr.id %></th>
+                            <td><%= usr.username %></td>
+                            <td><%= usr.email %></td>
+                            <td><%= usr.full_name %></td>
+                            <td><span class="text-muted font-monospace">********</span></td> <!-- Placeholder Data -->
+                            <td class="text-center"><span class="badge bg-<%= usr.role === 'admin' ? 'danger' : 'secondary' %>"><%= usr.role %></span></td>
+                            <td class="text-center">
+                                <!-- Actions Dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                            type="button"
+                                            id="userActionsDropdown-<%= usr.id %>"
+                                            data-bs-toggle="dropdown"
+                                            data-bs-container="body"
+                                            data-bs-boundary="viewport"
+                                            aria-expanded="false">
+                                        <%= lang.actions || 'Actions' %>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userActionsDropdown-<%= usr.id %>">
+                                        <!-- Edit User Button -->
+                                        <li>
+                                            <button class="dropdown-item edit-user-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editUserModal"
+                                                    data-user-id="<%= usr.id %>"
+                                                    data-user-username="<%= usr.username %>"
+                                                    data-user-email="<%= usr.email %>"
+                                                    data-user-full-name="<%= usr.full_name %>"
+                                                    data-user-role="<%= usr.role %>">
+                                                <i class="fas fa-edit me-1"></i> <%= lang.edit || 'Edit' %>
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <!-- Delete User Button -->
+                                        <li>
+                                            <button class="dropdown-item text-danger delete-user-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteUserModal"
+                                                    data-user-id="<%= usr.id %>"
+                                                    data-user-username="<%= usr.username %>">
+                                                <i class="fas fa-trash-alt me-1"></i> <%= lang.delete || 'Delete' %>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <!-- Se NÃO houver usuários, mostra a mensagem -->
+        <p class="text-center text-muted mt-3"><%= lang.no_users_found || 'No users found.' %></p>
+    <% } %>
+</div>
+
+<!-- Add User Modal - UPDATED -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/users/add" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel"><%= lang.add_user || 'Add New User' %></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="addUsername" class="form-label"><%= lang.username || 'Username' %>*</label>
+                        <input type="text" class="form-control" id="addUsername" name="username" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="addEmail" class="form-label"><%= lang.email || 'Email' %>*</label>
+                        <input type="email" class="form-control" id="addEmail" name="email" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="addFullName" class="form-label"><%= lang.full_name || 'Full Name' %>*</label>
+                        <input type="text" class="form-control" id="addFullName" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addPassword" class="form-label"><%= lang.password || 'Password' %>*</label>
+                        <input type="password" class="form-control" id="addPassword" name="password" required minlength="6">
+                         <div class="form-text"><%= lang.password_min_char || 'Minimum 6 characters.' %></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addRole" class="form-label"><%= lang.role || 'Role' %>*</label>
+                        <select class="form-select" id="addRole" name="role" required>
+                            <option value="user" selected><%= lang.role_user || 'User' %></option>
+                            <option value="admin"><%= lang.role_admin || 'Admin' %></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.cancel || 'Cancel' %></button>
+                    <button type="submit" class="btn btn-primary"><%= lang.add_user || 'Add User' %></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal - UPDATED -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editUserForm" action="" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel"><%= lang.edit_user || 'Edit User' %></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId" name="id">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label"><%= lang.username || 'Username' %>*</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="editEmail" class="form-label"><%= lang.email || 'Email' %>*</label>
+                        <input type="email" class="form-control" id="editEmail" name="email" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="editFullName" class="form-label"><%= lang.full_name || 'Full Name' %>*</label>
+                        <input type="text" class="form-control" id="editFullName" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label"><%= lang.new_password || 'New Password' %></label>
+                        <input type="password" class="form-control" id="editPassword" name="password" minlength="6">
+                        <div class="form-text"><%= lang.password_leave_blank || 'Leave blank to keep current password.' %></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label"><%= lang.role || 'Role' %>*</label>
+                        <select class="form-select" id="editRole" name="role" required>
+                            <option value="user"><%= lang.role_user || 'User' %></option>
+                            <option value="admin"><%= lang.role_admin || 'Admin' %></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.cancel || 'Cancel' %></button>
+                    <button type="submit" class="btn btn-primary"><%= lang.save || 'Save Changes' %></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal (No changes needed here) -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="deleteUserForm" action="" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel"><%= lang.delete_user_confirm_title || 'Confirm Deletion' %></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><%= lang.delete_user_confirm_msg || 'Are you sure you want to delete the user' %> <strong id="deleteUsernameSpan"></strong>? <%= lang.action_cannot_be_undone || 'This action cannot be undone.' %></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.cancel || 'Cancel' %></button>
+                    <button type="submit" class="btn btn-danger"><%= lang.delete || 'Delete' %></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Modal Population AND Dropdown Fix - UPDATED -->
+<script>
+    const scriptLang = <%- JSON.stringify(lang || {}) %>;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Edit User Modal Population ---
+        const editUserModal = document.getElementById('editUserModal');
+        if (editUserModal) {
+            const editUserForm = document.getElementById('editUserForm');
+            const editUserIdInput = document.getElementById('editUserId');
+            const editUsernameInput = document.getElementById('editUsername');
+            const editEmailInput = document.getElementById('editEmail'); // Added
+            const editFullNameInput = document.getElementById('editFullName'); // Added
+            const editRoleSelect = document.getElementById('editRole');
+            const editPasswordInput = document.getElementById('editPassword');
+
+            editUserModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const username = button.getAttribute('data-user-username');
+                const email = button.getAttribute('data-user-email'); // Added
+                const fullName = button.getAttribute('data-user-full-name'); // Added
+                const role = button.getAttribute('data-user-role');
+
+                editUserForm.action = `/users/edit/${userId}`;
+                if (editUserIdInput) editUserIdInput.value = userId;
+                if (editUsernameInput) editUsernameInput.value = username;
+                if (editEmailInput) editEmailInput.value = email; // Added
+                if (editFullNameInput) editFullNameInput.value = fullName; // Added
+                if (editRoleSelect) editRoleSelect.value = role;
+                if (editPasswordInput) editPasswordInput.value = '';
+            });
+        }
+
+        // --- Delete User Modal Population (No changes needed here) ---
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            const deleteUserForm = document.getElementById('deleteUserForm');
+            const deleteUsernameSpan = document.getElementById('deleteUsernameSpan');
+
+            deleteUserModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const username = button.getAttribute('data-user-username');
+
+                deleteUserForm.action = `/users/delete/${userId}`;
+                if (deleteUsernameSpan) deleteUsernameSpan.textContent = username;
+            });
+        }
+
+        // --- INÍCIO DO CÓDIGO MANUAL DROPDOWN FIX (Adaptado para Users) ---
+        console.log("Setting up manual dropdown move listener for Users...");
+        const tableContainer = document.querySelector('.table-responsive');
+
+        if (tableContainer) {
+            tableContainer.addEventListener('show.bs.dropdown', function (event) {
+                const dropdownToggle = event.relatedTarget;
+                if (!dropdownToggle || !dropdownToggle.matches('[data-bs-container="body"]') || !tableContainer.contains(dropdownToggle)) {
+                    return;
+                }
+
+                const buttonId = dropdownToggle.id;
+                if (!buttonId) {
+                    console.error("User dropdown toggle button is missing an ID:", dropdownToggle);
+                    return;
+                }
+                console.log("User dropdown show event triggered for:", buttonId);
+
+                const dropdownMenu = document.querySelector(`.dropdown-menu[aria-labelledby="${buttonId}"]`);
+
+                if (!dropdownMenu) {
+                    console.error("Could not find user dropdown menu using aria-labelledby for:", buttonId);
+                    return;
+                }
+
+                if (dropdownMenu.parentElement !== document.body) {
+                    console.log("User menu is not in body. Moving manually:", dropdownMenu);
+                    document.body.appendChild(dropdownMenu);
+
+                    const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                    if (dropdownInstance) {
+                        console.log("Updating user dropdown instance position...");
+                        dropdownInstance.update();
+                    } else {
+                        console.warn("Could not get user dropdown instance to update position for:", buttonId);
+                    }
+                } else {
+                     console.log("User menu already in body.");
+                     const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                     if (dropdownInstance) dropdownInstance.update();
+                }
+            });
+        } else {
+            console.warn("Could not find .table-responsive container for user dropdown listener.");
+        }
+        // --- FIM DO CÓDIGO MANUAL DROPDOWN FIX ---
+    });
+</script>

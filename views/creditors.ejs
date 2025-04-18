@@ -1,0 +1,170 @@
+<h1 class="mb-4">🤝 <%= lang.creditors || 'Creditors' %></h1>
+
+<!-- Button to open the add modal -->
+<div class="mb-3 text-start d-flex gap-2">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCreditorModal">
+    <%= lang.add_creditor || 'Add Creditor' %>
+  </button>
+</div>
+
+<!-- Creditors Table -->
+<div class="bg-white border rounded p-3 shadow-sm">
+  <% if (creditors && creditors.length > 0) { %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 45%;"><%= lang.creditor_name || 'Creditor Name' %></th>
+          <th style="width: 45%;"><%= lang.creditor_info || 'Information' %></th>
+          <th style="width: 10%;" class="text-center"><%= lang.actions || 'Actions' %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% creditors.forEach(creditor => { %>
+        <tr>
+          <td><%= creditor.name %></td>
+          <td><%= creditor.information || '-' %></td>
+          <td class="text-center">
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                      id="creditorActionsDropdown-<%= creditor.id %>"
+                      data-bs-toggle="dropdown"
+                      data-bs-container="body"   
+                      data-bs-boundary="viewport" 
+                      aria-expanded="false">
+                <%= lang.actions || 'Actions' %>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="creditorActionsDropdown-<%= creditor.id %>">
+                <li>
+                  <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editCreditorModal-<%= creditor.id %>">
+                    <i class="fas fa-edit me-1"></i> <%= lang.edit || 'Edit' %>
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <form action="/creditors/<%= creditor.id %>/delete" method="POST" class="d-inline"
+                        onsubmit="return confirm('<%= lang.confirm_delete_creditor || 'Are you sure you want to delete this creditor?' %>');">
+                    <button type="submit" class="dropdown-item text-danger">
+                      <i class="fas fa-trash-alt me-1"></i> <%= lang.delete || 'Delete' %>
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Edit Creditor Modal (inside loop) -->
+        <div class="modal fade" id="editCreditorModal-<%= creditor.id %>" tabindex="-1" aria-labelledby="editCreditorModalLabel-<%= creditor.id %>" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editCreditorModalLabel-<%= creditor.id %>"><%= lang.edit_creditor || 'Edit Creditor' %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form action="/creditors/<%= creditor.id %>/edit" method="POST">
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="edit_name-<%= creditor.id %>" class="form-label"><%= lang.creditor_name || 'Creditor Name' %>*</label>
+                    <input type="text" class="form-control" id="edit_name-<%= creditor.id %>" name="name" value="<%= creditor.name %>" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit_information-<%= creditor.id %>" class="form-label"><%= lang.creditor_info || 'Information' %></label>
+                    <textarea class="form-control" id="edit_information-<%= creditor.id %>" name="information" rows="3"><%= creditor.information || '' %></textarea>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.close || 'Close' %></button>
+                  <button type="submit" class="btn btn-primary"><%= lang.save_changes || 'Save Changes' %></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } else { %>
+  <p class="text-muted"><%= lang.no_creditors_registered || 'No creditors registered.' %></p>
+  <% } %>
+</div>
+
+<!-- Add Creditor Modal -->
+<div class="modal fade" id="addCreditorModal" tabindex="-1" aria-labelledby="addCreditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCreditorModalLabel"><%= lang.add_creditor || 'Add Creditor' %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/creditors" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="add_name" class="form-label"><%= lang.creditor_name || 'Creditor Name' %>*</label>
+            <input type="text" class="form-control" id="add_name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="add_information" class="form-label"><%= lang.creditor_info || 'Information' %></label>
+            <textarea class="form-control" id="add_information" name="information" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.close || 'Close' %></button>
+          <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+    const scriptLang = <%- JSON.stringify(lang || {}) %>;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Setting up manual dropdown move listener for Creditors...");
+        const tableContainer = document.querySelector('.table-responsive');
+
+        if (tableContainer) {
+            tableContainer.addEventListener('show.bs.dropdown', function (event) {
+                const dropdownToggle = event.relatedTarget;
+                if (!dropdownToggle || !dropdownToggle.matches('[data-bs-container="body"]') || !tableContainer.contains(dropdownToggle)) {
+                    return;
+                }
+
+                const buttonId = dropdownToggle.id;
+                if (!buttonId) {
+                    console.error("Creditor dropdown toggle button is missing an ID:", dropdownToggle);
+                    return;
+                }
+                console.log("Creditor dropdown show event triggered for:", buttonId);
+
+                const dropdownMenu = document.querySelector(`.dropdown-menu[aria-labelledby="${buttonId}"]`);
+
+                if (!dropdownMenu) {
+                    console.error("Could not find creditor dropdown menu using aria-labelledby for:", buttonId);
+                    return;
+                }
+
+                if (dropdownMenu.parentElement !== document.body) {
+                    console.log("Creditor menu is not in body. Moving manually:", dropdownMenu);
+                    document.body.appendChild(dropdownMenu);
+
+                    const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                    if (dropdownInstance) {
+                        console.log("Updating creditor dropdown instance position...");
+                        dropdownInstance.update();
+                    } else {
+                        console.warn("Could not get creditor dropdown instance to update position for:", buttonId);
+                    }
+                } else {
+                     console.log("Creditor menu already in body.");
+                     const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                     if (dropdownInstance) dropdownInstance.update();
+                }
+            });
+        } else {
+            console.warn("Could not find .table-responsive container for creditor dropdown listener.");
+        }
+    });
+</script>

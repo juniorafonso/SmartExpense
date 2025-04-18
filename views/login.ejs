@@ -31,12 +31,12 @@
           <h1 class="card-title text-center mb-4"><%= lang.app_name %> - <%= lang.login_title %></h1>
           <form action="/login" method="POST">
             <div class="mb-3">
-              <label for="usuario" class="form-label"><%= lang.username %></label>
-              <input type="text" class="form-control" id="usuario" name="usuario" required>
+              <label for="username" class="form-label"><%= lang.username %></label>
+              <input type="text" class="form-control" id="username" name="username" required>
             </div>
             <div class="mb-3">
-              <label for="senha" class="form-label"><%= lang.password %></label>
-              <input type="password" class="form-control" id="senha" name="senha" required>
+              <label for="password" class="form-label"><%= lang.password %></label>
+              <input type="password" class="form-control" id="password" name="password" required>
             </div>
             <div class="mb-3">
               <label for="language" class="form-label"><%= lang.select_language %></label>
@@ -46,7 +46,11 @@
                 <option value="fr">Français</option>
               </select>
             </div>
-            <% if (error) { %>
+            <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+              <div class="alert alert-danger" role="alert">
+                <%= error_msg %>
+              </div>
+            <% } else if (typeof error !== 'undefined' && error) { %>
               <div class="alert alert-danger" role="alert">
                 <%= lang.error_login %>
               </div>

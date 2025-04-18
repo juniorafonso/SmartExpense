@@ -1,0 +1,34 @@
+<!-- Edit Project Modal Structure -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Form action will be set dynamically by JavaScript -->
+      <form id="editProjectForm" action="" method="POST">
+        <div class="modal-header">
+          <!-- Note: 'lang' comes from the parent view where this is included -->
+          <h5 class="modal-title" id="editProjectModalLabel"><%= lang.edit_project || 'Edit Project' %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit_project_id" name="projectId">
+          <div class="mb-3">
+            <label for="edit_project_name" class="form-label"><%= lang.project_name || 'Project Name' %>*</label>
+            <input type="text" class="form-control" id="edit_project_name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_project_status" class="form-label"><%= lang.status || 'Status' %>*</label>
+            <select class="form-select" id="edit_project_status" name="status" required>
+              <option value="active"><%= lang.active || 'Active' %></option>
+              <option value="finished"><%= lang.finished || 'Finished' %></option>
+              <!-- Add other statuses if needed -->
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.cancel || 'Cancel' %></button>
+          <button type="submit" class="btn btn-primary"><%= lang.save_changes || 'Save Changes' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

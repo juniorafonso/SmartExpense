@@ -1,0 +1,22 @@
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <!-- Error Title (e.g., 404 - Not Found, Error) -->
+            <h1 class="display-4 text-danger"><%= title || 'Error' %></h1>
+            <!-- Error Message -->
+            <p class="lead"><%= message || (lang?.error_generic || 'An unexpected error occurred.') %></p>
+
+            <!-- Detailed Error (Only shown in Development Mode) -->
+            <% if (typeof errorDetail !== 'undefined' && errorDetail) { %>
+                <div class="alert alert-danger mt-4 text-start">
+                    <h5 class="alert-heading">Error Details (Development Mode)</h5>
+                    <!-- Use <pre> for preformatted text (stack trace) -->
+                    <pre><code><%= errorDetail %></code></pre>
+                </div>
+            <% } %>
+
+            <!-- Link to go back to the homepage -->
+            <a href="/" class="btn btn-primary mt-3"><%= lang?.go_home || 'Go Home' %></a>
+        </div>
+    </div>
+</div>
