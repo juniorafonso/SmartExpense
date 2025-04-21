@@ -184,7 +184,7 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
   router.get('/:name', requireLogin, (req, res) => {
     const lang = res.locals.lang;
     const projectName = req.params.name;
-    const currentConfig = getConfig(); // <-- Get current config
+    const currentConfig = getConfig();
 
     getProjectIdByName(db, projectName, (errId, projectId) => {
       if (errId) {
@@ -240,20 +240,49 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
             if (err) return reject(err);
             resolve(templates || []);
           });
+        }),
+        // 6. Fetch Income Sources (for dropdowns)
+        new Promise((resolve, reject) => {
+          db.all('SELECT id, name FROM income_sources ORDER BY name ASC', [], (err, incomeSourcesData) => {
+            if (err) return reject(err);
+            resolve(incomeSourcesData || []);
+          });
+        }),
+        // 7. Fetch Incomes with related source name
+        new Promise((resolve, reject) => {
+          const sql = `
+            SELECT
+              i.*,
+              s.name AS income_source_name
+            FROM incomes i
+            LEFT JOIN income_sources s ON i.income_source_id = s.id
+            WHERE i.project_id = ?
+            ORDER BY i.date DESC, i.id DESC
+          `;
+          db.all(sql, [projectId], (err, incomes) => {
+            if (err) return reject(err);
+            resolve(incomes || []);
+          });
         })
       ])
-      .then(([project, expenses, creditors, payments, templates]) => {
+      .then(([project, expenses, creditors, payments, templates, incomeSources, incomes]) => {
 
         // Calculate totals (can still be done here for initial display outside table)
         let totalPaid = 0;
         let totalUnpaid = 0;
-        let totalAmount = 0;
+        let totalExpenseAmount = 0;
         expenses.forEach(expense => {
             const amountValue = parseFloat(expense.amount) || 0;
-            totalAmount += amountValue;
+            totalExpenseAmount += amountValue;
             // Use 'unpaid' as the status for unpaid items
             if (expense.payment_status === 'paid') totalPaid += amountValue;
             if (expense.payment_status === 'unpaid') totalUnpaid += amountValue;
+        });
+
+        // Calculate income totals
+        let totalIncomeAmount = 0;
+        incomes.forEach(income => {
+            totalIncomeAmount += parseFloat(income.amount) || 0;
         });
 
         res.render('project', {
@@ -263,11 +292,14 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
           creditors,
           payments,
           templates,
-          totalAmount, // Pass calculated totals for display outside table
+          incomeSources, // <-- Pass incomeSources to the view
+          incomes, // Pass incomes to the view
+          totalExpenseAmount, // Renamed for clarity
           totalPaid,
           totalUnpaid,
+          totalIncomeAmount, // Pass total income
           config: currentConfig, // Pass current config object
-          layout: 'layout' // <-- ADICIONE ESTA LINHA
+          layout: 'layout'
           // lang is already in res.locals
         });
       })
@@ -492,6 +524,364 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
               });
           });
       });
+  });
+
+  // POST /:projectName/expenses (Add a new expense to a project) - NEW ROUTE
+  router.post('/:projectName/expenses', requireLogin, upload.single('file'), (req, res) => {
+    const lang = res.locals.lang;
+    const projectName = req.params.projectName;
+    const { name, amount, date, type, creditor_id, iban, notes } = req.body;
+    const file = req.file ? req.file.filename : null; // Get filename if uploaded
+
+    // Basic validation
+    if (!name || !amount || !date || !type) {
+      req.flash('error', lang.error_required_fields_missing || 'Required fields are missing.');
+      return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+    }
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/${projectName}/expenses] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        // If project not found, maybe redirect to projects list
+        return res.redirect('/projects');
+      }
+
+      const sql = `
+        INSERT INTO expenses (project_id, name, amount, date, type, creditor_id, iban, notes, file, payment_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid')
+      `;
+      const params = [
+        projectId,
+        name,
+        amount,
+        date,
+        type,
+        creditor_id || null, // Ensure NULL if empty
+        iban || null,
+        notes || null,
+        file
+      ];
+
+      db.run(sql, params, function(err) {
+        if (err) {
+          console.error(`[POST /project/${projectName}/expenses] Error inserting expense:`, err.message);
+          req.flash('error', lang.error_adding_expense || 'Error adding expense.');
+          // Clean up uploaded file if DB insert failed
+          if (file) {
+            const filePath = path.join(__dirname, '..', 'uploads', file);
+            fs.unlink(filePath, (unlinkErr) => {
+              if (unlinkErr) console.error(`[POST /project/${projectName}/expenses] Error deleting uploaded file after DB error:`, unlinkErr.message);
+            });
+          }
+        } else {
+          console.log(`[POST /project/${projectName}/expenses] Expense added successfully (ID: ${this.lastID}) to project ID ${projectId}.`);
+          req.flash('success', lang.success_expense_added || 'Expense added successfully.');
+        }
+        res.redirect(`/project/${encodeURIComponent(projectName)}`);
+      });
+    });
+  });
+
+  // POST /:projectName/expense/:expenseId/edit (Edit an existing expense) - NEW ROUTE
+  router.post('/:projectName/expense/:expenseId/edit', requireLogin, upload.single('file'), (req, res) => {
+    const lang = res.locals.lang;
+    const { projectName, expenseId } = req.params;
+    const { name, amount, date, type, creditor_id, iban, notes, delete_file } = req.body; // delete_file flag from form
+    const newFile = req.file ? req.file.filename : null; // Get filename if a *new* file was uploaded
+
+    // Basic validation
+    if (!name || !amount || !date || !type) {
+      req.flash('error', lang.error_required_fields_missing || 'Required fields are missing.');
+      return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+    }
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/.../expense/${expenseId}/edit] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        return res.redirect('/projects');
+      }
+
+      // 1. Get current expense data (including old filename)
+      db.get('SELECT file FROM expenses WHERE id = ? AND project_id = ?', [expenseId, projectId], (errFetch, currentExpense) => {
+        if (errFetch) {
+          console.error(`[POST /project/.../expense/${expenseId}/edit] Error fetching current expense:`, errFetch.message);
+          req.flash('error', lang.error_updating_expense || 'Error updating expense.');
+          return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+        }
+        if (!currentExpense) {
+          req.flash('error', lang.error_expense_not_found || 'Expense not found.');
+          return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+        }
+
+        const oldFile = currentExpense.file;
+        let fileToSave = oldFile; // Start with the old file
+        let shouldDeleteOldFile = false;
+
+        if (delete_file === 'true') {
+          fileToSave = null; // Mark file for removal in DB
+          shouldDeleteOldFile = true;
+          console.log(`[POST /project/.../expense/${expenseId}/edit] Flag delete_file is true. Marking old file '${oldFile}' for deletion.`);
+        }
+
+        if (newFile) {
+          fileToSave = newFile; // A new file replaces whatever was there
+          shouldDeleteOldFile = true; // Also delete the old one if a new one is uploaded
+          console.log(`[POST /project/.../expense/${expenseId}/edit] New file '${newFile}' uploaded. Marking old file '${oldFile}' for deletion.`);
+        }
+
+        // 2. Update the expense record
+        const sql = `
+          UPDATE expenses SET
+            name = ?, amount = ?, date = ?, type = ?, creditor_id = ?, iban = ?, notes = ?, file = ?
+          WHERE id = ? AND project_id = ?
+        `;
+        const params = [
+          name, amount, date, type,
+          creditor_id || null, iban || null, notes || null,
+          fileToSave, // Use the determined filename (new, null, or old)
+          expenseId, projectId
+        ];
+
+        db.run(sql, params, function(errUpdate) {
+          if (errUpdate) {
+            console.error(`[POST /project/.../expense/${expenseId}/edit] Error updating expense record:`, errUpdate.message);
+            req.flash('error', lang.error_updating_expense || 'Error updating expense.');
+            // Clean up newly uploaded file if DB update failed
+            if (newFile) {
+              const newFilePath = path.join(__dirname, '..', 'uploads', newFile);
+              fs.unlink(newFilePath, (unlinkErr) => {
+                if (unlinkErr) console.error(`[POST /project/.../expense/${expenseId}/edit] Error deleting newly uploaded file after DB error:`, unlinkErr.message);
+              });
+            }
+            return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+          }
+
+          console.log(`[POST /project/.../expense/${expenseId}/edit] Expense record updated successfully.`);
+
+          // 3. Delete the old physical file if necessary (AFTER successful DB update)
+          if (shouldDeleteOldFile && oldFile) {
+            // Check template usage BEFORE deleting
+            db.get('SELECT 1 FROM template_expenses WHERE file = ? LIMIT 1', [oldFile], (errCheckTpl, templateUsage) => {
+              if (errCheckTpl) {
+                console.error(`[POST /project/.../expense/${expenseId}/edit] Error checking template usage for old file ${oldFile}:`, errCheckTpl.message);
+                req.flash('warning', lang.warning_file_check_failed || 'Expense updated, but could not verify template usage for the old file.');
+              } else if (templateUsage) {
+                console.log(`[POST /project/.../expense/${expenseId}/edit] Old file ${oldFile} is used by a template. Physical file NOT deleted.`);
+              } else {
+                // Safe to delete old file
+                const oldFilePath = path.join(__dirname, '..', 'uploads', oldFile);
+                console.log(`[POST /project/.../expense/${expenseId}/edit] Deleting old physical file: ${oldFilePath}`);
+                fs.unlink(oldFilePath, (unlinkErr) => {
+                  if (unlinkErr && unlinkErr.code !== 'ENOENT') {
+                    console.error(`[POST /project/.../expense/${expenseId}/edit] Error deleting old physical file ${oldFile}:`, unlinkErr.message);
+                    req.flash('warning', lang.warning_file_delete_failed || 'Expense updated, but failed to delete the old associated file.');
+                  } else if (!unlinkErr) {
+                      console.log(`[POST /project/.../expense/${expenseId}/edit] Deleted old physical file ${oldFile}.`);
+                  }
+                });
+              }
+              // Redirect happens after the check (or potential unlink)
+              req.flash('success', lang.success_expense_updated || 'Expense updated successfully.');
+              res.redirect(`/project/${encodeURIComponent(projectName)}`);
+            });
+          } else {
+            // No old file to delete, or shouldn't delete it
+            req.flash('success', lang.success_expense_updated || 'Expense updated successfully.');
+            res.redirect(`/project/${encodeURIComponent(projectName)}`);
+          }
+        });
+      });
+    });
+  });
+
+  // POST /:projectName/expenses/:expenseId/pay (Mark expense as paid) - ADD/VERIFY THIS
+  router.post('/:projectName/expenses/:expenseId/pay', requireLogin, (req, res) => {
+    const lang = res.locals.lang;
+    const { projectName, expenseId } = req.params;
+    console.log(`[POST /project/.../expenses/${expenseId}/pay] Attempting to mark as paid.`);
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/.../expenses/${expenseId}/pay] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        return res.redirect('/projects');
+      }
+
+      const sql = `UPDATE expenses SET payment_status = 'paid' WHERE id = ? AND project_id = ?`;
+      db.run(sql, [expenseId, projectId], function(err) {
+        if (err) {
+          console.error(`[POST /project/.../expenses/${expenseId}/pay] Error updating payment status:`, err.message);
+          req.flash('error', lang.error_updating_payment_status || 'Error updating payment status.');
+        } else if (this.changes === 0) {
+          console.warn(`[POST /project/.../expenses/${expenseId}/pay] Expense ID ${expenseId} not found for project ID ${projectId}.`);
+          req.flash('warning', lang.error_expense_not_found || 'Expense not found.');
+        } else {
+          console.log(`[POST /project/.../expenses/${expenseId}/pay] Expense marked as paid successfully.`);
+          req.flash('success', lang.success_expense_marked_paid || 'Expense marked as paid.');
+        }
+        res.redirect(`/project/${encodeURIComponent(projectName)}`);
+      });
+    });
+  });
+
+  // POST /:projectName/expenses/:expenseId/unpay (Mark expense as unpaid) - ADD/VERIFY THIS
+  router.post('/:projectName/expenses/:expenseId/unpay', requireLogin, (req, res) => {
+    const lang = res.locals.lang;
+    const { projectName, expenseId } = req.params;
+    console.log(`[POST /project/.../expenses/${expenseId}/unpay] Attempting to mark as unpaid.`);
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/.../expenses/${expenseId}/unpay] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        return res.redirect('/projects');
+      }
+
+      const sql = `UPDATE expenses SET payment_status = 'unpaid' WHERE id = ? AND project_id = ?`;
+      db.run(sql, [expenseId, projectId], function(err) {
+        if (err) {
+          console.error(`[POST /project/.../expenses/${expenseId}/unpay] Error updating payment status:`, err.message);
+          req.flash('error', lang.error_updating_payment_status || 'Error updating payment status.');
+        } else if (this.changes === 0) {
+          console.warn(`[POST /project/.../expenses/${expenseId}/unpay] Expense ID ${expenseId} not found for project ID ${projectId}.`);
+          req.flash('warning', lang.error_expense_not_found || 'Expense not found.');
+        } else {
+          console.log(`[POST /project/.../expenses/${expenseId}/unpay] Expense marked as unpaid successfully.`);
+          req.flash('success', lang.success_expense_marked_unpaid || 'Expense marked as unpaid.');
+        }
+        res.redirect(`/project/${encodeURIComponent(projectName)}`);
+      });
+    });
+  });
+
+  // POST /:projectName/incomes (Add a new income to a project) - NOVA ROTA
+  router.post('/:projectName/incomes', requireLogin, (req, res) => {
+    const lang = res.locals.lang;
+    const projectName = req.params.projectName;
+    // Use os nomes dos campos do formulário que criaremos
+    const { name, amount, date, type, income_source_id, notes } = req.body;
+
+    // Validação básica
+    if (!name || !amount || !date || !type) {
+      req.flash('error', lang.error_required_income_fields || 'Name, Amount, Date, and Type are required for income.');
+      return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+    }
+    if (!['one-time', 'recurring'].includes(type)) {
+        req.flash('error', lang.error_invalid_income_type || 'Invalid income type selected.');
+        return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+    }
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/${projectName}/incomes] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        return res.redirect('/projects');
+      }
+
+      const sql = `
+        INSERT INTO incomes (project_id, name, amount, date, type, income_source_id, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        projectId,
+        name,
+        amount,
+        date,
+        type,
+        income_source_id || null, // Garante NULL se vazio
+        notes || null
+      ];
+
+      db.run(sql, params, function(err) {
+        if (err) {
+          console.error(`[POST /project/${projectName}/incomes] Error inserting income:`, err.message);
+          req.flash('error', lang.error_adding_income || 'Error adding income.');
+        } else {
+          console.log(`[POST /project/${projectName}/incomes] Income added successfully (ID: ${this.lastID}) to project ID ${projectId}.`);
+          req.flash('success', lang.success_income_added || 'Income added successfully.');
+        }
+        res.redirect(`/project/${encodeURIComponent(projectName)}`);
+      });
+    });
+  });
+
+  // POST /:projectName/incomes/:incomeId/edit (Edit an existing income) - NOVA ROTA
+  router.post('/:projectName/incomes/:incomeId/edit', requireLogin, (req, res) => {
+    const lang = res.locals.lang;
+    const { projectName, incomeId } = req.params;
+    const { name, amount, date, type, income_source_id, notes } = req.body;
+
+    // Validação
+    if (!name || !amount || !date || !type) {
+      req.flash('error', lang.error_required_income_fields || 'Name, Amount, Date, and Type are required for income.');
+      return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+    }
+     if (!['one-time', 'recurring'].includes(type)) {
+        req.flash('error', lang.error_invalid_income_type || 'Invalid income type selected.');
+        return res.redirect(`/project/${encodeURIComponent(projectName)}`);
+    }
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/.../incomes/${incomeId}/edit] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        return res.redirect('/projects');
+      }
+
+      const sql = `
+        UPDATE incomes SET
+          name = ?, amount = ?, date = ?, type = ?, income_source_id = ?, notes = ?
+        WHERE id = ? AND project_id = ?
+      `;
+      const params = [
+        name, amount, date, type,
+        income_source_id || null, notes || null,
+        incomeId, projectId
+      ];
+
+      db.run(sql, params, function(err) {
+        if (err) {
+          console.error(`[POST /project/.../incomes/${incomeId}/edit] Error updating income:`, err.message);
+          req.flash('error', lang.error_updating_income || 'Error updating income.');
+        } else if (this.changes === 0) {
+          req.flash('warning', lang.warning_income_not_found_or_no_change || 'Income not found or no changes made.');
+        } else {
+          console.log(`[POST /project/.../incomes/${incomeId}/edit] Income updated successfully.`);
+          req.flash('success', lang.success_income_updated || 'Income updated successfully.');
+        }
+        res.redirect(`/project/${encodeURIComponent(projectName)}`);
+      });
+    });
+  });
+
+  // POST /:projectName/incomes/:incomeId/delete (Delete an income) - NOVA ROTA
+  router.post('/:projectName/incomes/:incomeId/delete', requireLogin, (req, res) => {
+    const lang = res.locals.lang;
+    const { projectName, incomeId } = req.params;
+
+    getProjectIdByName(db, projectName, (errId, projectId) => {
+      if (errId) {
+        console.error(`[POST /project/.../incomes/${incomeId}/delete] Error finding project ID:`, errId.message);
+        req.flash('error', lang.error_project_not_found || 'Project not found.');
+        return res.redirect('/projects');
+      }
+
+      const sql = 'DELETE FROM incomes WHERE id = ? AND project_id = ?';
+      db.run(sql, [incomeId, projectId], function(err) {
+        if (err) {
+          console.error(`[POST /project/.../incomes/${incomeId}/delete] Error deleting income:`, err.message);
+          req.flash('error', lang.error_deleting_income || 'Error deleting income.');
+        } else if (this.changes === 0) {
+          req.flash('warning', lang.warning_income_not_found_delete || 'Income not found.');
+        } else {
+          console.log(`[POST /project/.../incomes/${incomeId}/delete] Income deleted successfully.`);
+          req.flash('success', lang.success_income_deleted || 'Income deleted successfully.');
+        }
+        res.redirect(`/project/${encodeURIComponent(projectName)}`);
+      });
+    });
   });
 
   return router;

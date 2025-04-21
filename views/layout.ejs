@@ -109,6 +109,8 @@
       <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.system || 'System' %></span>
       <!-- Link to Payment Methods page -->
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">💳 <%= lang.payment_methods || 'Payment Methods' %></a>
+      <!-- Link to Income Sources page -->
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">💰 <%= lang.income_sources || 'Income Sources' %></a>
       <!-- Link to Creditors page -->
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">🤝 <%= lang.creditors || 'Creditors' %></a>
 

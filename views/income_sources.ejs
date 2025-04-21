@@ -1,0 +1,195 @@
+<h1 class="mb-4">💰 <%= lang.income_sources || 'Income Sources' %></h1>
+
+<!-- Button to open the add modal -->
+<div class="mb-3 text-start d-flex gap-2">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIncomeSourceModal">
+    <%= lang.add_income_source || 'Add Income Source' %>
+  </button>
+</div>
+
+<!-- Income Sources Table -->
+<div class="bg-white border rounded p-3 shadow-sm">
+  <% if (sources && sources.length > 0) { %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 45%;"><%= lang.income_source_name || 'Source Name' %></th>
+          <th style="width: 45%;"><%= lang.income_source_type || 'Type' %></th>
+          <th style="width: 10%;" class="text-center"><%= lang.actions || 'Actions' %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sources.forEach(source => { %>
+        <tr>
+          <td><%= source.name %></td>
+          <td><%= source.type || '-' %></td>
+          <td class="text-center">
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                      id="sourceActionsDropdown-<%= source.id %>"
+                      data-bs-toggle="dropdown"
+                      data-bs-container="body"
+                      data-bs-boundary="viewport"
+                      aria-expanded="false">
+                <%= lang.actions || 'Actions' %>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sourceActionsDropdown-<%= source.id %>">
+                <li>
+                  <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editIncomeSourceModal-<%= source.id %>">
+                    <i class="fas fa-edit me-1"></i> <%= lang.edit || 'Edit' %>
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <form action="/income-sources/<%= source.id %>/delete" method="POST" class="d-inline"
+                        onsubmit="return confirm('<%= lang.confirm_delete_source || 'Are you sure you want to delete this income source?' %>');">
+                    <button type="submit" class="dropdown-item text-danger">
+                      <i class="fas fa-trash-alt me-1"></i> <%= lang.delete || 'Delete' %>
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Edit Income Source Modal (inside loop) -->
+        <div class="modal fade" id="editIncomeSourceModal-<%= source.id %>" tabindex="-1" aria-labelledby="editIncomeSourceModalLabel-<%= source.id %>" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editIncomeSourceModalLabel-<%= source.id %>"><%= lang.edit_income_source || 'Edit Income Source' %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form action="/income-sources/<%= source.id %>/edit" method="POST">
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="edit_name-<%= source.id %>" class="form-label"><%= lang.income_source_name || 'Source Name' %>*</label>
+                    <input type="text" class="form-control" id="edit_name-<%= source.id %>" name="name" value="<%= source.name %>" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit_type-<%= source.id %>" class="form-label"><%= lang.income_source_type || 'Type' %></label>
+                    <select class="form-select" id="edit_type-<%= source.id %>" name="type">
+                      <option value="" <%= !source.type ? 'selected' : '' %>><%= lang.select_type || 'Select Type...' %></option>
+                      <option value="Client" <%= source.type === 'Client' ? 'selected' : '' %>><%= lang.client || 'Client' %></option>
+                      <option value="Investment" <%= source.type === 'Investment' ? 'selected' : '' %>><%= lang.investment || 'Investment' %></option>
+                      <option value="Salary" <%= source.type === 'Salary' ? 'selected' : '' %>><%= lang.salary || 'Salary' %></option>
+                      <option value="Sales" <%= source.type === 'Sales' ? 'selected' : '' %>><%= lang.sales || 'Sales' %></option>
+                      <option value="Other" <%= source.type === 'Other' ? 'selected' : '' %>><%= lang.other || 'Other' %></option>
+                      <!-- Add more types as needed -->
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.close || 'Close' %></button>
+                  <button type="submit" class="btn btn-primary"><%= lang.save_changes || 'Save Changes' %></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } else { %>
+  <p class="text-muted"><%= lang.no_income_sources_found || 'No income sources found.' %></p>
+  <% } %>
+</div>
+
+<!-- Add Income Source Modal -->
+<div class="modal fade" id="addIncomeSourceModal" tabindex="-1" aria-labelledby="addIncomeSourceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addIncomeSourceModalLabel"><%= lang.add_income_source || 'Add Income Source' %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/income-sources" method="POST"> <!-- Action points to POST /income-sources -->
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="add_name" class="form-label"><%= lang.income_source_name || 'Source Name' %>*</label>
+            <input type="text" class="form-control" id="add_name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="add_type" class="form-label"><%= lang.income_source_type || 'Type' %></label>
+            <select class="form-select" id="add_type" name="type">
+              <option value=""><%= lang.select_type || 'Select Type...' %></option>
+              <option value="Client"><%= lang.client || 'Client' %></option>
+              <option value="Investment"><%= lang.investment || 'Investment' %></option>
+              <option value="Salary"><%= lang.salary || 'Salary' %></option>
+              <option value="Sales"><%= lang.sales || 'Sales' %></option>
+              <option value="Other"><%= lang.other || 'Other' %></option>
+              <!-- Add more types as needed -->
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= lang.close || 'Close' %></button>
+          <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Include the same dropdown positioning script as creditors.ejs -->
+<script>
+    const scriptLang = <%- JSON.stringify(lang || {}) %>;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Setting up manual dropdown move listener for Income Sources...");
+        const tableContainer = document.querySelector('.table-responsive');
+
+        if (tableContainer) {
+            tableContainer.addEventListener('show.bs.dropdown', function (event) {
+                const dropdownToggle = event.relatedTarget;
+                // Ensure the event is for a dropdown button within this table container
+                if (!dropdownToggle || !dropdownToggle.matches('[data-bs-toggle="dropdown"]') || !tableContainer.contains(dropdownToggle)) {
+                    return;
+                }
+                // Ensure it has the expected container setting
+                 if (dropdownToggle.getAttribute('data-bs-container') !== 'body') {
+                    return;
+                 }
+
+                const buttonId = dropdownToggle.id;
+                if (!buttonId) {
+                    console.error("Income Source dropdown toggle button is missing an ID:", dropdownToggle);
+                    return;
+                }
+                console.log("Income Source dropdown show event triggered for:", buttonId);
+
+                const dropdownMenu = document.querySelector(`.dropdown-menu[aria-labelledby="${buttonId}"]`);
+
+                if (!dropdownMenu) {
+                    console.error("Could not find income source dropdown menu using aria-labelledby for:", buttonId);
+                    return;
+                }
+
+                // Move to body if not already there
+                if (dropdownMenu.parentElement !== document.body) {
+                    console.log("Income Source menu is not in body. Moving manually:", dropdownMenu);
+                    document.body.appendChild(dropdownMenu);
+
+                    // Attempt to update position after moving
+                    const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                    if (dropdownInstance) {
+                        console.log("Updating income source dropdown instance position...");
+                        dropdownInstance.update();
+                    } else {
+                        console.warn("Could not get income source dropdown instance to update position for:", buttonId);
+                    }
+                } else {
+                     console.log("Income Source menu already in body.");
+                     // Ensure position is updated even if already in body
+                     const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                     if (dropdownInstance) dropdownInstance.update();
+                }
+            });
+        } else {
+            console.warn("Could not find .table-responsive container for income source dropdown listener.");
+        }
+    });
+</script>

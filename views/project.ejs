@@ -1,64 +1,80 @@
 <h1 class="mb-4"><span class="fw-bold"><%= lang.project || 'Project' %>:</span> <%= project.name %></h1>
 
+
 <script>
   var projectName = "<%= project.name.replace(/"/g, '\\"') %>";
 
   // Função para preencher e abrir o modal de add expense
   window.showAddExpenseForm = function() {
-  var overlay = document.getElementById('formAddExpenseOverlay');
-  var container = document.getElementById('formAddExpense');
-  var form = container.querySelector('form');
-  if (!form) return;
+    var overlay = document.getElementById('formAddExpenseOverlay');
+    var container = document.getElementById('formAddExpense');
+    var form = container.querySelector('form');
+    if (!form) return;
 
-  // Limpa os campos do formulário
-  form.reset();
-  form.action = "/project/" + encodeURIComponent(projectName) + "/expenses";
-  // Se tiver campos especiais, limpe-os manualmente:
-  var currentFileContainer = document.getElementById('currentFileContainer');
-  var newFileContainer = document.getElementById('newFileContainer');
-  if (currentFileContainer) currentFileContainer.style.display = 'none';
-  if (newFileContainer) newFileContainer.style.display = 'block';
-  var deleteFileInput = form.querySelector('[name="delete_file"]');
-  if (deleteFileInput) deleteFileInput.value = 'false';
+    // Limpa os campos do formulário
+    form.reset();
+    form.action = "/project/" + encodeURIComponent(projectName) + "/expenses";
+    // Se tiver campos especiais, limpe-os manualmente:
+    var currentFileContainer = document.getElementById('currentFileContainer');
+    var newFileContainer = document.getElementById('newFileContainer');
+    if (currentFileContainer) currentFileContainer.style.display = 'none';
+    if (newFileContainer) newFileContainer.style.display = 'block';
+    var deleteFileInput = form.querySelector('[name="delete_file"]');
+    if (deleteFileInput) deleteFileInput.value = 'false';
 
-  overlay.style.display = 'block';
-  container.style.display = 'block';
-};
+    overlay.style.display = 'block';
+    container.style.display = 'block';
+  };
+
+  // Função para preencher e abrir o modal de add income
+  window.showAddIncomeForm = function() {
+    var overlay = document.getElementById('formAddIncomeOverlay');
+    var container = document.getElementById('formAddIncome');
+    var form = container.querySelector('form');
+    if (!form) return;
+
+    // Limpa os campos do formulário
+    form.reset();
+    form.action = "/project/" + encodeURIComponent(projectName) + "/incomes"; // Define a action correta
+
+    overlay.style.display = 'block';
+    container.style.display = 'block';
+  };
 
   // Função para preencher e abrir o modal de edição
   window.showEditExpenseForm = function(id, name, amount, date, type, iban, notes, file, creditor_id) {
-  var overlay = document.getElementById('formEditExpenseOverlay');
-  var container = document.getElementById('formEditExpense');
-  var form = container.querySelector('form');
-  if (!form) return;
+    var overlay = document.getElementById('formEditExpenseOverlay');
+    var container = document.getElementById('formEditExpense');
+    var form = container.querySelector('form');
+    if (!form) return;
 
-  form.action = "/project/" + encodeURIComponent(projectName) + "/expense/" + id + "/edit";
-  form.querySelector('[name="id"]').value = id || '';
-  form.querySelector('#edit_name').value = name || '';
-  form.querySelector('#edit_amount').value = amount || '';
-  form.querySelector('#edit_date').value = date ? new Date(date).toISOString().split('T')[0] : '';
-  form.querySelector('#edit_type').value = type || '';
-  var creditorField = form.querySelector('#edit_creditor_id');
-  if (creditorField) creditorField.value = creditor_id || '';
-  form.querySelector('#edit_iban').value = iban || '';
-  form.querySelector('#edit_notes').value = notes || '';
-  // File handling
-  var currentFileContainer = document.getElementById('currentFileContainer');
-  var currentFileLink = document.getElementById('currentFileLink');
-  var newFileContainer = document.getElementById('newFileContainer');
-  var deleteFileInput = form.querySelector('[name="delete_file"]');
-  if (deleteFileInput) deleteFileInput.value = 'false';
-  if (file) {
-    currentFileLink.textContent = file;
-    currentFileLink.href = "/uploads/" + encodeURIComponent(file);
-    currentFileContainer.style.display = 'block';
-    newFileContainer.style.display = 'none';
-  } else {
-    currentFileContainer.style.display = 'none';
-    newFileContainer.style.display = 'block';
-  }
-  overlay.style.display = 'block';
-  container.style.display = 'block';
+    form.action = "/project/" + encodeURIComponent(projectName) + "/expense/" + id + "/edit";
+    form.querySelector('[name="id"]').value = id || '';
+    form.querySelector('#edit_name').value = name || '';
+    form.querySelector('#edit_amount').value = amount || '';
+    form.querySelector('#edit_date').value = date ? new Date(date).toISOString().split('T')[0] : '';
+    form.querySelector('#edit_type').value = type || '';
+    var creditorField = form.querySelector('#edit_creditor_id');
+    if (creditorField) creditorField.value = creditor_id || '';
+    form.querySelector('#edit_iban').value = iban || '';
+    form.querySelector('#edit_notes').value = notes || '';
+    // File handling
+    var currentFileContainer = document.getElementById('currentFileContainer');
+    var currentFileLink = document.getElementById('currentFileLink');
+    var newFileContainer = document.getElementById('newFileContainer');
+    var deleteFileInput = form.querySelector('[name="delete_file"]');
+    if (deleteFileInput) deleteFileInput.value = 'false';
+    if (file) {
+      currentFileLink.textContent = file;
+      currentFileLink.href = "/uploads/" + encodeURIComponent(file);
+      currentFileContainer.style.display = 'block';
+      newFileContainer.style.display = 'none';
+    } else {
+      currentFileContainer.style.display = 'none';
+      newFileContainer.style.display = 'block';
+    }
+    overlay.style.display = 'block';
+    container.style.display = 'block';
   };
 
   // Função para abrir o modal de pagamento
@@ -88,11 +104,33 @@
     var form = document.getElementById('formEditExpense').querySelector('form');
     form.querySelector('[name="delete_file"]').value = 'true';
   };
+
+  // Função para preencher e abrir o modal de edição de income
+  window.showEditIncomeForm = function(id, name, amount, date, type, income_source_id, notes) {
+    var overlay = document.getElementById('formEditIncomeOverlay');
+    var container = document.getElementById('formEditIncome');
+    var form = container.querySelector('form');
+    if (!form) return;
+
+    form.action = "/project/" + encodeURIComponent(projectName) + "/incomes/" + id + "/edit";
+    form.querySelector('#edit_income_id').value = id || ''; // Adicionado campo hidden para ID
+    form.querySelector('#edit_income_name').value = name || '';
+    form.querySelector('#edit_income_amount').value = amount || '';
+    form.querySelector('#edit_income_date').value = date ? new Date(date).toISOString().split('T')[0] : '';
+    form.querySelector('#edit_income_type').value = type || 'one-time';
+    var sourceField = form.querySelector('#edit_income_source_id');
+    if (sourceField) sourceField.value = income_source_id || '';
+    form.querySelector('#edit_income_notes').value = notes || '';
+
+    overlay.style.display = 'block';
+    container.style.display = 'block';
+  };
 </script>
 
 <% script = `
 <script>
   const expensesData = ${JSON.stringify(expenses || [])};
+  const incomesData = ${JSON.stringify(incomes || [])};
   const lang = ${JSON.stringify(lang || {})};
   const locale = "${config.DEFAULT_LOCALE || 'en-US'}";
   const currency = "${config.DEFAULT_CURRENCY || 'USD'}";
@@ -101,22 +139,39 @@
   window.dateFormatter = function(value) {
     if (!value) return '-';
     try {
-      const date = new Date(value);
+      const date = new Date(value + 'T00:00:00');
       if (isNaN(date.getTime())) return value;
-      return date.toISOString().split('T')[0];
-    } catch (e) { return value; }
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return day + '/' + month + '/' + year;
+    } catch (e) {
+      console.error("Error formatting date:", value, e);
+      return value;
+    }
   };
+
   window.currencyFormatter = function(value) {
     if (value == null) return '-';
     try {
       return Number(value).toLocaleString(locale, { style: 'currency', currency: currency });
-    } catch (e) { return value; }
+    } catch (e) {
+      return value;
+    }
   };
-  window.typeFormatter = function(value) {
+
+  window.expenseTypeFormatter = function(value) {
     if (value === 'fixed') return lang.fixed || "Fixed";
     if (value === 'one-time') return lang.one_time || "One-time";
     return value || '-';
   };
+
+  window.incomeTypeFormatter = function(value) {
+    if (value === 'recurring') return lang.recurring_income || "Recurring";
+    if (value === 'one-time') return lang.one_time_income || "One-time";
+    return value || '-';
+  };
+
   window.statusFormatter = function(value) {
     let badgeClass = 'bg-secondary';
     let text = value;
@@ -132,41 +187,46 @@
     }
     return '<span class="badge ' + badgeClass + '">' + text + '</span>';
   };
+
   window.fileFormatter = function(value) {
     if (value) {
-      return '<a href="/uploads/' + encodeURIComponent(value) + '" target="_blank" class="text-decoration-none" title="' + value + '"><i class="bi bi-file-earmark-text-fill fs-5"></i></a>';
+      return '<a href="/uploads/' + encodeURIComponent(value) + '" target="_blank" class="text-decoration-none" title="' + value + '">💾</a>';
     }
-    return '<span class="text-muted"><i class="bi bi-file-earmark-excel fs-5"></i></span>';
+    return '<span class="text-muted">🚫</span>';
   };
-  window.notesFormatter = function(value) {
+
+  window.notesFormatter = function(value, row) {
     if (value) {
-      return '<span title="' + value.replace(/"/g, '&quot;') + '"><i class="bi bi-sticky-fill fs-5 text-info"></i></span>';
+      const shortNotes = value.length > 30 ? value.substring(0, 27) + '...' : value;
+      const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      return '<span tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" data-bs-content="' + escapedValue + '" title="' + (lang.notes || 'Notes') + '">' + shortNotes + '</span>';
+    } else {
+      return '<span title="' + (lang.no_notes || 'No notes') + '">🚫</span>';
     }
-    return '<span class="text-muted"><i class="bi bi-sticky fs-5"></i></span>';
   };
 
   // ACTIONS FORMATTER E EVENTS
-  window.actionsFormatter = function(value, row) {
+  window.expenseActionsFormatter = function(value, row) {
     return (
       '<div class="dropdown">' +
         '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
           (lang.actions || "Actions") +
         '</button>' +
         '<ul class="dropdown-menu">' +
-          '<li><button type="button" class="dropdown-item edit-expense">' + (lang.edit || "Edit") + '</button></li>' +
-          (row.payment_status === 'unpaid' ? '<li><button type="button" class="dropdown-item pay-expense">' + (lang.mark_paid || "Mark as paid") + '</button></li>' : '') +
-          (row.payment_status === 'paid' ? '<li><button type="button" class="dropdown-item unpay-expense">' + (lang.mark_unpaid || "Mark as unpaid") + '</button></li>' : '') +
+          '<li><button type="button" class="dropdown-item edit-expense-btn">' + (lang.edit || "Edit") + '</button></li>' +
+          (row.payment_status === 'unpaid' ? '<li><button type="button" class="dropdown-item pay-expense-btn">' + (lang.mark_paid || "Mark as paid") + '</button></li>' : '') +
+          (row.payment_status === 'paid' ? '<li><button type="button" class="dropdown-item unpay-expense-btn">' + (lang.mark_unpaid || "Mark as unpaid") + '</button></li>' : '') +
           '<li><hr class="dropdown-divider"></li>' +
-          '<li><button type="button" class="dropdown-item text-danger delete-expense">' + (lang.delete || "Delete") + '</button></li>' +
+          '<li><button type="button" class="dropdown-item text-danger delete-expense-btn">' + (lang.delete || "Delete") + '</button></li>' +
         '</ul>' +
       '</div>' +
-      '<form id="delete-form-' + row.id + '" action="/project/' + encodeURIComponent(projectName) + '/expenses/' + row.id + '/delete" method="POST" style="display:none;"></form>' +
-      '<form id="unpay-form-' + row.id + '" action="/project/' + encodeURIComponent(projectName) + '/expenses/' + row.id + '/unpay" method="POST" style="display:none;"></form>'
+      '<form id="delete-expense-form-' + row.id + '" action="/project/' + encodeURIComponent(projectName) + '/expenses/' + row.id + '/delete" method="POST" style="display:none;"></form>' +
+      '<form id="unpay-expense-form-' + row.id + '" action="/project/' + encodeURIComponent(projectName) + '/expenses/' + row.id + '/unpay" method="POST" style="display:none;"></form>'
     );
   };
 
-  window.actionsEvents = {
-    'click .edit-expense': function (e, value, row, index) {
+  window.expenseActionsEvents = {
+    'click .edit-expense-btn': function (e, value, row, index) {
       window.showEditExpenseForm(
         row.id,
         row.name,
@@ -179,36 +239,124 @@
         row.creditor_id
       );
     },
-    'click .pay-expense': function (e, value, row, index) {
+    'click .pay-expense-btn': function (e, value, row, index) {
       window.openPaymentModal(projectName, row.id);
     },
-    'click .unpay-expense': function (e, value, row, index) {
-      document.getElementById('unpay-form-' + row.id).submit();
+    'click .unpay-expense-btn': function (e, value, row, index) {
+      document.getElementById('unpay-expense-form-' + row.id).submit();
     },
-    'click .delete-expense': function (e, value, row, index) {
+    'click .delete-expense-btn': function (e, value, row, index) {
       if (confirm(lang.confirm_delete_expense || "Are you sure you want to delete this expense?")) {
-        document.getElementById('delete-form-' + row.id).submit();
+        document.getElementById('delete-expense-form-' + row.id).submit();
+      }
+    }
+  };
+
+  window.incomeActionsFormatter = function(value, row) {
+    return (
+      '<div class="dropdown">' +
+        '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
+          (lang.actions || "Actions") +
+        '</button>' +
+        '<ul class="dropdown-menu dropdown-menu-end">' + // Alinha o menu ao final
+          '<li><button type="button" class="dropdown-item edit-income-btn">' + (lang.edit || "Edit") + '</button></li>' +
+          '<li><hr class="dropdown-divider"></li>' +
+          '<li><button type="button" class="dropdown-item text-danger delete-income-btn">' + (lang.delete || "Delete") + '</button></li>' +
+        '</ul>' +
+      '</div>' +
+      '<form id="delete-income-form-' + row.id + '" action="/project/' + encodeURIComponent(projectName) + '/incomes/' + row.id + '/delete" method="POST" style="display:none;"></form>'
+    );
+  };
+
+  window.incomeActionsEvents = {
+    'click .edit-income-btn': function (e, value, row, index) {
+      window.showEditIncomeForm(
+        row.id,
+        row.name,
+        row.amount,
+        row.date,
+        row.type,
+        row.income_source_id,
+        row.notes
+      );
+    },
+    'click .delete-income-btn': function (e, value, row, index) {
+      if (confirm(lang.confirm_delete_income || "Are you sure you want to delete this income?")) {
+        document.getElementById('delete-income-form-' + row.id).submit();
       }
     }
   };
 
   $(document).ready(function() {
+
+    $('#incomesTable').bootstrapTable({
+      data: incomesData,
+      search: true,
+      showColumns: true,
+      showColumnsToggleAll: true,
+      pagination: true,
+      pageSize: 10,
+      pageList: "[10, 25, 50, All]",
+      toolbar: "#incomesToolbar",
+      idField: "id",
+      sortName: "date",
+      sortOrder: "desc"
+    });
+
     $('#expensesTable').bootstrapTable({
       data: expensesData
     });
 
+    function initializePopovers() {
+      const existingPopovers = document.querySelectorAll('[data-bs-toggle="popover"]');
+      existingPopovers.forEach(el => {
+        const instance = bootstrap.Popover.getInstance(el);
+        if (instance) {
+          instance.dispose();
+        }
+      });
+      const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+      popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+      });
+    }
+
+    $('#incomesTable, #expensesTable').on('load-success.bs.table post-body.bs.table', function () {
+      initializePopovers();
+    });
+
+    initializePopovers();
+
     // Atualização dos totais
     function updateTotals() {
-      let totalPaid = 0, totalUnpaid = 0, totalAmount = 0;
+      let totalPaid = 0, totalUnpaid = 0, totalExpenseAmount = 0;
       expensesData.forEach(row => {
         const amount = parseFloat(row.amount) || 0;
-        totalAmount += amount;
+        totalExpenseAmount += amount;
         if (row.payment_status === 'paid') totalPaid += amount;
         if (row.payment_status === 'unpaid') totalUnpaid += amount;
       });
       $('#totalPaidDisplay').text(totalPaid.toLocaleString(locale, { style: 'currency', currency: currency }));
       $('#totalUnpaidDisplay').text(totalUnpaid.toLocaleString(locale, { style: 'currency', currency: currency }));
-      $('#totalAmountDisplay').text(totalAmount.toLocaleString(locale, { style: 'currency', currency: currency }));
+      $('#totalExpenseAmountDisplay').text(totalExpenseAmount.toLocaleString(locale, { style: 'currency', currency: currency }));
+
+      let totalIncome = 0;
+      incomesData.forEach(row => {
+        totalIncome += parseFloat(row.amount) || 0;
+      });
+      $('#totalIncomeDisplay').text(totalIncome.toLocaleString(locale, { style: 'currency', currency: currency }));
+
+      const balance = totalIncome - totalExpenseAmount;
+      const balanceDisplay = $('#balanceDisplay');
+      balanceDisplay.text(balance.toLocaleString(locale, { style: 'currency', currency: currency }));
+      balanceDisplay.removeClass('text-success text-danger text-muted');
+      if (balance > 0) {
+        balanceDisplay.addClass('text-success');
+      } else if (balance < 0) {
+        balanceDisplay.addClass('text-danger');
+      } else {
+        balanceDisplay.addClass('text-muted');
+      }
     }
     updateTotals();
   });
@@ -216,6 +364,7 @@
 ` %>
 
 <style>
+
   .custom-form-overlay {
     position: fixed;
     top: 0;
@@ -247,41 +396,46 @@
     z-index: 1010;
   }
 
-  /* --- CSS Fix for Dropdown Overflow in Bootstrap Table --- */
+  /* Define uma largura fixa para as colunas "Actions" */
+  .table-actions-column {
+    width: 7%; /* Ajuste o valor conforme necessário */
+    min-width: 7%;
+    max-width: 7%;
+    text-align: center; /* Centraliza o conteúdo */
+  }
 
-  /* Ensure the cell containing the dropdown allows overflow */
+  .dropdown-menu-end {
+    right: 0; /* Garante que o menu fique alinhado ao final */
+  } 
+
+  #incomesTable td .dropdown{
+    overflow: visible;
+    position: static;
+  }
+
   #expensesTable td .dropdown {
-    overflow: visible; /* Allow dropdown to go outside cell bounds */
-    position: static; /* Reset position if it was changed */
+    overflow: visible;
+    position: static;
   }
 
-  /* Ensure the table wrapper allows dropdowns to overflow */
-  /* This might be needed if .table-responsive is clipping */
   .table-responsive {
-      overflow: visible; /* Allow content (dropdowns) to overflow */
-      /* Note: This might disable horizontal scrolling if the table is wider than the container. */
-      /* If horizontal scroll is needed, this fix might require a different approach. */
+    width: 100%;
+    overflow: visible;
   }
-
-  /* Alternative if .table-responsive fix breaks layout: */
-  /* Try making the dropdown menu position fixed temporarily on open, */
-  /* but this is complex and often requires JavaScript. */
-  /* Let's stick to simpler CSS first. */
-
-  /* Ensure dropdown menu has a high z-index */
+  
+  #incomesTable .dropdown-menu,
   #expensesTable .dropdown-menu {
-    z-index: 1050; /* Higher than most elements, adjust if needed */
+    z-index: 1050;
   }
 
-  /* If using sticky-header, the header might overlap. Adjust if necessary */
   .bootstrap-table .fixed-table-header {
-      z-index: 1040; /* Ensure header is below dropdown */
+    z-index: 1040;
   }
-  /* --- End CSS Fix --- */
 </style>
 
 <div class="mb-3 text-start d-flex flex-wrap gap-2">
   <button class="btn btn-success" onclick="showAddExpenseForm()"><%= lang.add_expense || 'Add Expense' %></button>
+  <button class="btn btn-primary" onclick="showAddIncomeForm()"><%= lang.add_income || 'Add Income' %></button>
   <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProjectModal">
     <%= lang.edit_project || 'Edit Project' %>
   </button>
@@ -293,19 +447,56 @@
   </button>
 </div>
 
+<h3 class="mt-4 mb-3"><%= lang.incomes || 'Incomes' %></h3>
+<div id="incomesToolbar" class="mb-2"></div>
+<div class="table-responsive bg-white border rounded p-2 shadow-sm">
+  <table
+    id="incomesTable"
+    class="table table-hover table-sm align-middle"
+    data-resizable="true"
+    data-reorderable-columns="true"
+    data-search="true"
+    data-show-columns="true"
+    data-show-columns-toggle-all="true"
+    data-pagination="true"
+    data-page-size="25"
+    data-page-list="[10, 25, 50, All]"
+    data-toolbar="#incomesToolbar"
+    data-id-field="id"
+    data-sort-name="date"
+    data-sort-order="desc"
+  >
+    <thead class="table-light">
+      <tr>
+        <th data-field="id" data-visible="false">ID</th>
+        <th data-field="name" data-sortable="true"><%= lang.name || 'Name' %></th>
+        <th data-field="income_source_name" data-sortable="true"><%= lang.income_source || 'Source' %></th>
+        <th data-field="date" data-visible="false" data-sortable="true" data-formatter="dateFormatter"><%= lang.date || 'Date' %></th>
+        <th data-field="type" data-sortable="true" data-formatter="incomeTypeFormatter" data-align="center"><%= lang.type || 'Type' %></th>
+        
+        <th data-field="notes" data-sortable="false" data-formatter="notesFormatter" data-align="center"><%= lang.notes || 'Notes' %></th>
+        <th data-field="amount" data-sortable="true" data-formatter="currencyFormatter" data-align="right"><%= lang.amount || 'Amount' %></th>
+        <th data-field="actions" data-formatter="incomeActionsFormatter" data-events="incomeActionsEvents" data-align="center" class="table-actions-column"><%= lang.actions || 'Actions' %></th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+
 <h3 class="mt-4 mb-3"><%= lang.expenses || 'Expenses' %></h3>
 <div id="toolbar" class="mb-2"></div>
 
 <div class="table-responsive bg-white border rounded p-2 shadow-sm">
   <table
     id="expensesTable"
-    class="table table-hover table-sm align-middle"
+    class="table table-hover table-sm align-middle table-fixed-layout"
     data-search="true"
     data-show-columns="true"
     data-show-columns-toggle-all="true"
     data-resizable="true"
     data-pagination="true"
-    data-page-size="10"
+    data-page-size="25"
     data-page-list="[10, 25, 50, 100, All]"
     data-toolbar="#toolbar"
     data-id-field="id"
@@ -314,23 +505,24 @@
     data-reorderable-columns="true"
     data-sticky-header="true"
   >
-    <thead class="table-light">
-      <tr>
-        <th data-field="id" data-visible="false">ID</th>
-        <th data-field="name" data-sortable="true"><%= lang.name || 'Name' %></th>
-        <th data-field="creditor_name" data-sortable="true"><%= lang.creditor_name || 'Creditor' %></th>
-        <th data-field="date" data-sortable="true" data-formatter="dateFormatter"><%= lang.date || 'Date' %></th>
-        <th data-field="type" data-sortable="true" data-formatter="typeFormatter" data-align="center"><%= lang.type || 'Type' %></th>
-        <th data-field="iban" data-sortable="false" data-visible="false"><%= lang.iban || 'IBAN' %></th>
-        <th data-field="payment_method_name" data-sortable="true"><%= lang.payment_method || 'Payment Method' %></th>
-        <th data-field="amount" data-sortable="true" data-formatter="currencyFormatter" data-align="right"><%= lang.amount || 'Amount' %></th>
-        <th data-field="file" data-sortable="false" data-formatter="fileFormatter" data-align="center"><%= lang.file || 'File' %></th>
-        <th data-field="notes" data-sortable="false" data-formatter="notesFormatter" data-align="center" data-visible="false"><%= lang.notes || 'Notes' %></th>
-        <th data-field="payment_status" data-sortable="true" data-formatter="statusFormatter" data-align="center"><%= lang.status || 'Status' %></th>
-        <th data-field="actions" data-formatter="actionsFormatter" data-events="actionsEvents" data-align="center"><%= lang.actions || 'Actions' %></th>
-      </tr>
-    </thead>
+  <thead class="table-light">
+    <tr>
+      <th data-field="id" data-visible="false">ID</th>
+      <th data-field="name" data-sortable="true"><%= lang.name || 'Name' %></th>
+      <th data-field="creditor_name" data-sortable="true"><%= lang.creditor_name || 'Creditor' %></th>
+      <th data-field="date" data-visible="false" data-sortable="true" data-formatter="dateFormatter"><%= lang.date || 'Date' %></th>
+      <th data-field="type" data-sortable="true" data-formatter="expenseTypeFormatter" data-align="center"><%= lang.type || 'Type' %></th>
+      <th data-field="iban" data-sortable="false"><%= lang.iban || 'IBAN' %></th>
+      <th data-field="payment_method_name" data-sortable="true"><%= lang.payment_method || 'Payment Method' %></th>
+      <th data-field="file" data-sortable="false" data-formatter="fileFormatter" data-align="center"><%= lang.file || 'File' %></th>
+      <th data-field="notes" data-sortable="false" data-formatter="notesFormatter" data-align="center"><%= lang.notes || 'Notes' %></th>
+      <th data-field="payment_status" data-sortable="true" data-formatter="statusFormatter" data-align="center"><%= lang.status || 'Status' %></th>
+      <th data-field="amount" data-sortable="true" data-formatter="currencyFormatter" data-align="right"><%= lang.amount || 'Amount' %></th>
+      <th data-field="actions" data-formatter="expenseActionsFormatter" data-events="expenseActionsEvents" data-align="center" class="table-actions-column"><%= lang.actions || 'Actions' %></th>
+    </tr>
+  </thead>
     <tbody>
+      <%# Bootstrap table preenche isso via JS %>
     </tbody>
   </table>
 </div>
@@ -348,11 +540,32 @@
       <%= Number(totalUnpaid || 0).toLocaleString(config.DEFAULT_LOCALE || 'en-US', { style: 'currency', currency: config.DEFAULT_CURRENCY || 'USD' }) %>
     </div>
   </div>
+
   <hr class="my-1">
   <div class="row fw-bold fs-5">
-    <div class="col text-end"><%= lang.total_value || 'Total Value' %>:</div>
-    <div class="col-auto text-end" id="totalAmountDisplay">
-      <%= Number(totalAmount || 0).toLocaleString(config.DEFAULT_LOCALE || 'en-US', { style: 'currency', currency: config.DEFAULT_CURRENCY || 'USD' }) %>
+    <div class="col text-end"><%= lang.total_expenses || 'Total Expenses' %>:</div>
+    <div class="col-auto text-end" id="totalExpenseAmountDisplay">
+      <%= Number(totalExpenseAmount || 0).toLocaleString(config.DEFAULT_LOCALE || 'en-US', { style: 'currency', currency: config.DEFAULT_CURRENCY || 'USD' }) %>
+    </div>
+
+    
+  </div>
+</div>
+
+<div class="mt-3 p-3 bg-light border rounded">
+  <div class="row fw-bold fs-5 text-success">
+    <div class="col text-end"><%= lang.total_income || 'Total Income' %>:</div>
+    <div class="col-auto text-end" id="totalIncomeDisplay">
+      <%= Number(totalIncomeAmount || 0).toLocaleString(config.DEFAULT_LOCALE || 'en-US', { style: 'currency', currency: config.DEFAULT_CURRENCY || 'USD' }) %>
+    </div>
+  </div>
+</div>
+
+
+<div class="mt-4 p-3 bg-white border rounded shadow-sm">
+  <div class="row fw-bold fs-4">
+    <div class="col text-end"><%= lang.balance || 'Balance' %>:</div>
+    <div class="col-auto text-end" id="balanceDisplay">
     </div>
   </div>
 </div>
@@ -480,6 +693,56 @@
   </form>
 </div>
 
+<div id="formEditIncomeOverlay" class="custom-form-overlay" onclick="closeForms()"></div>
+<div id="formEditIncome" class="custom-form-container">
+  <h5 class="mb-3"><%= lang.edit_income || 'Edit Income' %></h5>
+  <form method="POST">
+    <input type="hidden" id="edit_income_id" name="id">
+    <div class="row g-3">
+        <div class="col-md-6 mb-3">
+          <label for="edit_income_name" class="form-label"><%= lang.name || 'Name' %>*</label>
+          <input type="text" class="form-control" id="edit_income_name" name="name" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="edit_income_amount" class="form-label"><%= lang.amount || 'Amount' %>*</label>
+          <input type="number" step="0.01" class="form-control" id="edit_income_amount" name="amount" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="edit_income_date" class="form-label"><%= lang.date || 'Date' %>*</label>
+          <input type="date" class="form-control" id="edit_income_date" name="date" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="edit_income_type" class="form-label"><%= lang.type || 'Type' %>*</label>
+          <select class="form-select" id="edit_income_type" name="type" required>
+            <option value="one-time"><%= lang.one_time_income || 'One-time' %></option>
+            <option value="recurring"><%= lang.recurring_income || 'Recurring' %></option>
+          </select>
+        </div>
+        <div class="col-12 mb-3">
+          <label for="edit_income_source_id" class="form-label"><%= lang.income_source || 'Income Source' %></label>
+          <% if (typeof incomeSources !== 'undefined' && incomeSources && incomeSources.length > 0) { %>
+            <select name="income_source_id" id="edit_income_source_id" class="form-select">
+              <option value=""><%= lang.select_income_source || 'Select a source (Optional)' %></option>
+              <% incomeSources.forEach(source => { %>
+                <option value="<%= source.id %>"><%= source.name %></option>
+              <% }) %>
+            </select>
+          <% } else { %>
+            <p class="text-muted small"><%= lang.no_income_sources_add_one || 'No income sources available.' %></p>
+          <% } %>
+        </div>
+        <div class="col-12 mb-3">
+          <label for="edit_income_notes" class="form-label"><%= lang.notes || 'Notes' %></label>
+          <textarea class="form-control" id="edit_income_notes" name="notes" rows="2"></textarea>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-outline-secondary" onclick="closeForms()"><%= lang.cancel || 'Cancel' %></button>
+      <button type="submit" class="btn btn-primary"><%= lang.save_changes || 'Save Changes' %></button>
+    </div>
+  </form>
+</div>
+
 <div class="modal fade" id="selectPaymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -495,7 +758,7 @@
               <option value="" disabled selected><%= lang.please_select || 'Please select...' %></option>
               <% if (payments && payments.length > 0) { %>
                 <% payments.forEach(payment => { %>
-                  <option value="<%= payment.id %>"><%= payment.name %> (<%=
+                  <option value="<%= payment.id %>"><%= payment.name %> (<%= 
                     lang[payment.payment_type] ? lang[payment.payment_type] :
                     payment.payment_type === 'cash' ? 'Cash' :
                     payment.payment_type === 'bank_account' ? 'Bank Account' :
@@ -583,4 +846,53 @@
       </form>
     </div>
   </div>
+</div>
+
+<div id="formAddIncomeOverlay" class="custom-form-overlay" onclick="closeForms()"></div>
+<div id="formAddIncome" class="custom-form-container">
+  <h5 class="mb-3"><%= lang.add_income || 'Add Income' %></h5>
+  <form action="/project/<%= project.name %>/incomes" method="POST">
+    <div class="row g-3">
+        <div class="col-md-6 mb-3">
+          <label for="add_income_name" class="form-label"><%= lang.name || 'Name' %>*</label>
+          <input type="text" class="form-control" id="add_income_name" name="name" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="add_income_amount" class="form-label"><%= lang.amount || 'Amount' %>*</label>
+          <input type="number" step="0.01" class="form-control" id="add_income_amount" name="amount" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="add_income_date" class="form-label"><%= lang.date || 'Date' %>*</label>
+          <input type="date" class="form-control" id="add_income_date" name="date" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="add_income_type" class="form-label"><%= lang.type || 'Type' %>*</label>
+          <select class="form-select" id="add_income_type" name="type" required>
+            <option value="one-time"><%= lang.one_time_income || 'One-time' %></option>
+            <option value="recurring"><%= lang.recurring_income || 'Recurring' %></option>
+          </select>
+        </div>
+        <div class="col-12 mb-3">
+          <label for="add_income_source_id" class="form-label"><%= lang.income_source || 'Income Source' %></label>
+          <% if (typeof incomeSources !== 'undefined' && incomeSources && incomeSources.length > 0) { %>
+            <select name="income_source_id" id="add_income_source_id" class="form-select">
+              <option value=""><%= lang.select_income_source || 'Select a source (Optional)' %></option>
+              <% incomeSources.forEach(source => { %>
+                <option value="<%= source.id %>"><%= source.name %></option>
+              <% }) %>
+            </select>
+          <% } else { %>
+            <p class="text-muted small"><%= lang.no_income_sources_add_one || 'No income sources available. Add one in the Income Sources section.' %></p>
+          <% } %>
+        </div>
+        <div class="col-12 mb-3">
+          <label for="add_income_notes" class="form-label"><%= lang.notes || 'Notes' %></label>
+          <textarea class="form-control" id="add_income_notes" name="notes" rows="2"></textarea>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-outline-secondary" onclick="closeForms()"><%= lang.cancel || 'Cancel' %></button>
+      <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+    </div>
+  </form>
 </div>

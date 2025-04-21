@@ -1,0 +1,37 @@
+# Git files
+.git
+.gitignore
+
+# Docker specific files
+.dockerignore
+Dockerfile
+compose.yaml
+docker-compose.yml
+docker-cmds
+estrutura_projeto.txt
+
+# Dependencies - These should be installed inside the container
+node_modules
+npm-debug.log
+
+# Logs
+*.log
+
+# Environment variables - Should be passed via compose file or other means
+.env
+.env.*
+
+# SQLite Database file - Should be managed via a volume, not copied into the image
+database/smart_expense.db
+*.db
+*.db-journal
+
+# Uploads directory - Should be managed via a volume
+uploads/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Optional: IDE/Editor configuration
+# .vscode/
