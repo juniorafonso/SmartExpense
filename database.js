@@ -150,6 +150,21 @@ function createTables(db) {
             tablePromises.push(runSql(`CREATE INDEX IF NOT EXISTS idx_incomes_project ON incomes(project_id)`, "creating 'idx_incomes_project' index"));
             tablePromises.push(runSql(`CREATE INDEX IF NOT EXISTS idx_incomes_source ON incomes(income_source_id)`, "creating 'idx_incomes_source' index"));
 
+            // --- Tabela para o Plano Anual --- <<< ADICIONADO
+            console.log("[DB] Adding 'annual_plan_items' table...");
+            tablePromises.push(runSql(`
+                CREATE TABLE IF NOT EXISTS annual_plan_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    month_year TEXT,
+                    expense_name TEXT,
+                    expense_amount REAL DEFAULT 0,
+                    deposit_amount REAL DEFAULT 0,
+                    order_index INTEGER NOT NULL
+                )
+            `, "creating 'annual_plan_items' table"));
+            tablePromises.push(runSql(`CREATE INDEX IF NOT EXISTS idx_annual_plan_order ON annual_plan_items(order_index)`, "creating 'idx_annual_plan_order' index"));
+
+
             // Wait for all table/index operations to complete
             Promise.all(tablePromises)
                 .then(() => {

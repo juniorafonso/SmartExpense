@@ -152,7 +152,18 @@
     "error_checking_usage": "Erro ao verificar o uso da fonte.",
     "error_source_in_use": "Não é possível excluir esta fonte pois está associada a registros de renda existentes.",
     "error_deleting_data": "Erro ao excluir dados.",
-    "success_source_deleted": "Fonte de renda excluída com sucesso."
+    "success_source_deleted": "Fonte de renda excluída com sucesso.",
+    "annual_expense_plan_title": "Plano de Despesas Anual",
+    "month_year": "Mês/Ano",
+    "expense_name": "Nome da Despesa",
+    "deposit": "Depósito",
+    "balance": "Saldo",
+    "final_balance": "Saldo Final",
+    "add_row": "Adicionar Linha",
+    "move_up": "Mover para Cima",
+    "move_down": "Mover para Baixo",
+    "confirm_delete_row": "Tem certeza que deseja excluir esta linha?",
+    "error_reordering_data": "Erro ao reordenar linhas."
   },
   "en": {
     "app_name": "SmartExpense",
@@ -307,7 +318,18 @@
     "error_checking_usage": "Error checking source usage.",
     "error_source_in_use": "Cannot delete this source because it is associated with existing income records.",
     "error_deleting_data": "Error deleting data.",
-    "success_source_deleted": "Income source deleted successfully."
+    "success_source_deleted": "Income source deleted successfully.",
+    "annual_expense_plan_title": "Annual Expense Plan",
+    "month_year": "Month/Year",
+    "expense_name": "Expense Name",
+    "deposit": "Deposit",
+    "balance": "Balance",
+    "final_balance": "Final Balance",
+    "add_row": "Add Row",
+    "move_up": "Move Up",
+    "move_down": "Move Down",
+    "confirm_delete_row": "Are you sure you want to delete this row?",
+    "error_reordering_data": "Error reordering rows."
   },
   "fr": {
     "app_name": "SmartExpense",
@@ -462,6 +484,17 @@
     "error_checking_usage": "Erreur lors de la vérification de l'utilisation de la source.",
     "error_source_in_use": "Impossible de supprimer cette source car elle est associée à des enregistrements de revenus existants.",
     "error_deleting_data": "Erreur lors de la suppression des données.",
-    "success_source_deleted": "Source de revenus supprimée avec succès."
+    "success_source_deleted": "Source de revenus supprimée avec succès.",
+    "annual_expense_plan_title": "Plan Annuel de Dépenses",
+    "month_year": "Mois/Année",
+    "expense_name": "Nom de la Dépense",
+    "deposit": "Dépôt",
+    "balance": "Solde",
+    "final_balance": "Solde Final",
+    "add_row": "Ajouter Ligne",
+    "move_up": "Monter",
+    "move_down": "Descendre",
+    "confirm_delete_row": "Êtes-vous sûr de vouloir supprimer cette ligne ?",
+    "error_reordering_data": "Erreur lors de la réorganisation des lignes."
   }
 }

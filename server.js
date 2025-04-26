@@ -24,7 +24,7 @@ const sessionSecret = process.env.SESSION_SECRET;
 // DATABASE_PATH is now primarily used within database.js
 // const dbPath = process.env.DATABASE_PATH || './db.sqlite'; // No longer needed here
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const DEV_MODE = NODE_ENV === 'development';
+const DEV_MODE = process.env.NODE_ENV !== 'production';
 
 // Check if SESSION_SECRET is defined in .env
 if (!sessionSecret) {
@@ -151,7 +151,7 @@ async function startApp() {
     // =============================================================================
     const localsMiddleware = require('./middleware/locals');
     const setupMiddleware = require('./middleware/setup');
-    const authMiddlewareFunctions = require('./middleware/auth')(DEV_MODE, db); // Pass db
+    const authMiddlewareFunctions = require('./middleware/auth')(DEV_MODE); // Pass only DEV_MODE
 
     // =============================================================================
     // Express App Configuration (Middleware Pipeline)
@@ -159,11 +159,19 @@ async function startApp() {
 
     // Session Configuration
     app.use(session({
-      secret: sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-      cookie: { secure: !DEV_MODE, httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }
-    }));
+        secret: sessionSecret,
+        resave: false,
+        saveUninitialized: false,
+        // store: store, // Descomente se estiver usando um store persistente como connect-sqlite3
+        cookie: {
+          // secure: true, // Linha do teste
+          secure: !DEV_MODE, // REVERTA para a lógica original (true em produção, false em dev)
+          httpOnly: true,
+          // sameSite: 'None', // Linha do teste
+          sameSite: 'lax', // REVERTA para 'lax'
+          maxAge: 1000 * 60 * 60 * 24 // 1 day
+        }
+      }));
 
     // Connect-Flash Middleware
     app.use(flash());
@@ -199,7 +207,7 @@ async function startApp() {
     // Import & Mount Routes (AFTER DB is initialized and middlewares are set)
     // =============================================================================
     // Pass the resolved 'db' instance and other dependencies
-    const indexRoutes = require('./routes/index')(authMiddlewareFunctions);
+    const indexRoutes = require('./routes/index')(db, authMiddlewareFunctions); // <<< CORRIGIDO: Passar 'db' primeiro
     const authRoutes = require('./routes/auth')(db, bcrypt, saltRounds, getNeedsSetup, setNeedsSetup, lang, getDefaultLocale, setDefaultLocale);
     const projectRoutes = require('./routes/projects')(db, upload, getConfig, authMiddlewareFunctions);
     const templateRoutes = require('./routes/templates')(db, upload, authMiddlewareFunctions);
@@ -208,17 +216,18 @@ async function startApp() {
     const settingRoutes = require('./routes/settings')(getConfig, updateConfigAndGlobals, lang, getDefaultLocale, authMiddlewareFunctions);
     const userRoutes = require('./routes/users')(db, authMiddlewareFunctions, saltRounds);
     const setupRoutes = require('./routes/setup')(db, setNeedsSetup, saltRounds);
-    const incomeSourceRoutes = require('./routes/i_sources')(db, authMiddlewareFunctions); // <-- ADICIONE ESTA LINHA
+    const incomeSourceRoutes = require('./routes/i_sources')(db, authMiddlewareFunctions);
+    const annualPlanRoutes = require('./routes/annual_plan')(db, authMiddlewareFunctions); // <<< ADICIONADO
 
     // Mount Routes
-    app.use('/', indexRoutes);
+    app.use('/', indexRoutes); // <<< Agora deve funcionar
     app.use('/', authRoutes); // Handles login/logout
     app.use('/setup', setupRoutes); // <-- MOUNT SETUP ROUTES
 
     // Middleware to redirect to setup if needed (BEFORE protected routes)
     app.use((req, res, next) => {
-        const allowedPaths = ['/setup', '/public', '/css', '/js', '/libs', '/lang', '/uploads'];
-        const isAllowed = req.path.startsWith('/api') || allowedPaths.some(p => req.path.startsWith(p));
+        const allowedPaths = ['/setup', '/public', '/css', '/js', '/libs', '/lang', '/uploads', '/api']; // Allow /api paths
+        const isAllowed = allowedPaths.some(p => req.path.startsWith(p));
 
         if (needsSetup && !isAllowed) {
              console.log(`[Redirect] Needs setup, redirecting from ${req.path} to /setup`);
@@ -235,7 +244,8 @@ async function startApp() {
     app.use('/payments', paymentRoutes);
     app.use('/settings', settingRoutes);
     app.use('/users', userRoutes);
-    app.use('/income-sources', incomeSourceRoutes); // <-- ADICIONE ESTA LINHA
+    app.use('/income-sources', incomeSourceRoutes);
+    app.use('/api/annual-plan', annualPlanRoutes); // <<< ADICIONADO: Monta as rotas da API
 
     // =============================================================================
     // Error Handling Middleware (Should be last)
@@ -246,7 +256,8 @@ async function startApp() {
           title: '404 - Not Found',
           message: res.locals.lang?.error_404_message || `The page you requested (${req.originalUrl}) was not found.`,
           user: req.session?.user,
-          lang: res.locals.lang
+          lang: res.locals.lang,
+          layout: 'layout' // Explicitamente define o layout para a página de erro
       });
     });
 
@@ -258,7 +269,8 @@ async function startApp() {
           message: res.locals.lang?.error_generic || 'An unexpected error occurred.',
           errorDetail: DEV_MODE ? (err.stack || err.message) : undefined,
           user: req.session?.user,
-          lang: res.locals.lang
+          lang: res.locals.lang,
+          layout: 'layout' // Explicitamente define o layout para a página de erro
       });
     });
 

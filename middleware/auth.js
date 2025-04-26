@@ -46,7 +46,39 @@ function requireAdmin(DEV_MODE) {
   };
 }
 
+/**
+ * Middleware: Garante que o usuário esteja autenticado (usado para rotas gerais pós-login).
+ * Inclui logs de debug para problemas mobile.
+ */
+function ensureAuthenticated(req, res, next) {
+    // Log headers and session for debugging mobile issues
+    // console.log(`[Auth Check Debug] Path: ${req.path}`);
+    // console.log('[Auth Check Debug] Headers:', JSON.stringify(req.headers, null, 2)); // Log all headers
+    // console.log('[Auth Check Debug] Session ID:', req.sessionID); // Log session ID
+    // console.log('[Auth Check Debug] Session User:', req.session.user); // Log user object in session
+
+    // Access needsSetup from res.locals, set by checkNeedsSetupMiddleware
+    if (res.locals.needsSetup) {
+        console.log('[Auth Check] Needs setup: Allowing access via res.locals.');
+        return next(); // Allow access if setup is needed
+    }
+
+    if (req.session.user) {
+        console.log('[Auth Check] User authenticated:', req.session.user.username);
+        return next(); // User is authenticated, proceed
+    } else {
+        console.log('[Auth Check] Login required: Redirecting to /login');
+        // Store the original URL they were trying to access, if it's not the login page itself
+        if (req.originalUrl !== '/login' && req.originalUrl !== '/setup') {
+            req.session.returnTo = req.originalUrl;
+        }
+        res.redirect('/login'); // User not authenticated, redirect to login
+    }
+}
+
+// Exporta uma função que retorna um objeto com os middlewares configurados
 module.exports = (DEV_MODE) => ({
   requireLogin: requireLogin(DEV_MODE),
-  requireAdmin: requireAdmin(DEV_MODE)
+  requireAdmin: requireAdmin(DEV_MODE),
+  ensureAuthenticated // Exporta a função ensureAuthenticated diretamente
 });

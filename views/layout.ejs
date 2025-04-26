@@ -3,152 +3,259 @@
 <html lang="<%= config.DEFAULT_LOCALE || 'en' %>">
 <head>
   <meta charset="UTF-8">
-  <title><%= typeof title !== 'undefined' ? title : 'SmartExpense' %></title> <!-- Changed title logic -->
+  <title><%= typeof title !== 'undefined' ? title : 'SmartExpense' %></title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Link to local Bootstrap CSS -->
   <link href="/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons (Using CDN for simplicity, use local if preferred/configured) -->
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-  <!-- ADDED: Bootstrap Table CSS from node_modules -->
+  <!-- Bootstrap Table CSS -->
   <link rel="stylesheet" href="/libs/bootstrap-table/bootstrap-table.min.css">
-  <!-- END ADDED -->
-
-  <!-- ADDED: jquery-resizable-columns CSS -->
+  <!-- jquery-resizable-columns CSS -->
   <link rel="stylesheet" href="/libs/jquery-resizable-columns/jquery.resizableColumns.css">
-  <!-- END ADDED -->
 
   <!-- Custom Styles -->
   <style>
     body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: row; /* Default layout: sidebar left, content right */
-    }
-    .sidebar {
-      width: 250px; /* Fixed width for sidebar */
-      min-height: 100vh; /* Full height */
       background-color: #f8f9fa; /* Light background */
-      border-right: 1px solid #dee2e6; /* Separator */
-      display: flex; /* Use flexbox for internal alignment */
-      flex-direction: column; /* Stack elements vertically */
     }
-    .sidebar .nav {
-        flex-grow: 1; /* Allow nav to take available space */
+
+    /* --- Desktop Sidebar Styles --- */
+    .desktop-sidebar {
+      width: 250px; min-width: 250px; height: 100vh;
+      position: fixed; top: 0; left: 0;
+      background-color: #fff; border-right: 1px solid #dee2e6;
+      display: flex; flex-direction: column;
+      z-index: 1030;
+      overflow: hidden;
+      box-sizing: border-box;
     }
-    .sidebar .nav-link {
-      color: #333; /* Default link color */
-      padding: 0.5rem 1rem; /* Adjust padding */
+    /* Estilo unificado para o header/brand */
+    .brand-header-common {
+        /* AUMENTADO o padding vertical (top/bottom) */
+        padding: 1.5rem 1rem; /* Exemplo: Aumentado de 0.81rem para 1.5rem */
+        border-bottom: 1px solid #dee2e6;
+        text-align: center;
+        font-size: 1.5rem; /* Mantido o tamanho da fonte aumentado */
+        font-weight: 500;
+        line-height: 1.2;
+        margin-bottom: 0;
     }
-    .sidebar .nav-link:hover,
-    .sidebar .nav-link.active { /* Style for active link */
-      background-color: #e9ecef; /* Hover/Active background */
-      color: #000; /* Darker text on hover/active */
-      border-radius: 0.25rem; /* Slightly rounded corners */
+    .desktop-sidebar .sidebar-header h4,
+    .top-navbar .navbar-brand h4 {
+        margin-bottom: 0;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
     }
-     .sidebar .nav-link.active {
-        font-weight: bold; /* Make active link bold */
+    /* Aplicar scroll à área de navegação DENTRO da sidebar */
+    .desktop-sidebar .nav {
+      flex-grow: 1;
+      min-height: 0;
+      width: 100%;           /* Garante que ocupe toda a largura da sidebar */
+      display: block;        /* Remove flex do nav */
+      padding: 1rem 0 1rem 1rem; /* Só padding à esquerda */
+      overflow-y: auto;
+      overflow-x: hidden;
+      box-sizing: border-box;
+      scrollbar-gutter: stable;
     }
-    .sidebar hr {
-        margin: 1rem 0; /* Space around dividers */
+    .desktop-sidebar .nav-link {
+      color: #333;
+      padding: 0.5rem 1rem 0.5rem 1rem;
+      margin-bottom: 0.25rem;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;           /* Força o link a ocupar toda a largura do nav */
+      max-width: 100%;       /* Não deixa crescer além do nav */
+      overflow: hidden;
+      justify-content: flex-start;
+      flex-shrink: 0;
     }
-    .sidebar .text-secondary { /* Style for section headers */
-        padding: 0 1rem; /* Align with nav links */
+    .desktop-sidebar .nav-link:hover,
+    .desktop-sidebar .nav-link.active { background-color: #e9ecef; color: #000; border-radius: 0.25rem; }
+    .desktop-sidebar .nav-link.active { font-weight: bold; }
+    .desktop-sidebar hr { margin: 1rem 0; }
+    .desktop-sidebar .nav-section-title {
+        font-weight: bold; color: #6c757d; text-transform: uppercase;
+        font-size: 0.875em; padding: 0 1rem 0.5rem 1rem;
     }
-    .content {
-      flex-grow: 1; /* Take remaining width */
-      padding: 2rem; /* Padding around content */
-      background-color: #fff; /* White background for content area */
-      overflow-y: auto; /* Allow content to scroll if needed */
+    /* Controlar o texto dentro do span */
+    .desktop-sidebar .nav-link .link-text {
+      flex-grow: 1;
+      flex-shrink: 1;
+      min-width: 0;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      text-align: left; /* Manter alinhamento à esquerda */
+      overflow: hidden; /* Manter corte de overflow */
     }
-    /* Responsive adjustments for smaller screens */
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column; /* Stack sidebar and content vertically */
-      }
-      .sidebar {
-        width: 100%; /* Full width */
-        min-height: auto; /* Adjust height */
-        border-right: none; /* Remove right border */
-        border-bottom: 1px solid #dee2e6; /* Add bottom border */
-      }
-      .content {
-        padding: 1rem; /* Reduce padding */
-      }
+
+    /* --- Content Area Styles --- */
+    .content-wrapper { padding: 1.5rem; }
+
+    /* --- Responsive Adjustments --- */
+    @media (min-width: 992px) { /* Desktop view */
+      body { padding-left: 250px; padding-top: 0; }
+      .top-navbar { display: none !important; }
     }
-    /* Style for Bootstrap Table toolbar/buttons */
-    #toolbar {
-        margin-bottom: 1rem;
+
+    @media (max-width: 991.98px) { /* Mobile view */
+       /* AUMENTAR a altura da navbar e o padding do body */
+       body {
+         /* Ajustar padding-top para corresponder à nova altura da navbar */
+         padding-top: 100px; /* Exemplo: Aumentado de 56px para 70px */
+         padding-left: 0;
+       }
+       .top-navbar {
+         position: fixed; top: 0; left: 0; right: 0; z-index: 1035;
+         /* AUMENTAR a altura mínima da navbar */
+         min-height: 100px; /* Exemplo: Aumentado de 56px para 70px */
+         align-items: center; /* Manter alinhamento vertical */
+       }
+       .top-navbar .navbar-brand {
+           padding-top: 0; padding-bottom: 0; margin-right: 0;
+           font-size: 1.5rem; /* Mantido o tamanho da fonte aumentado */
+           font-weight: 500; line-height: 1.2;
+           /* O alinhamento vertical é feito pelo align-items: center no .top-navbar */
+       }
+       .top-navbar .navbar-collapse {
+         width: 100%; background-color: #fff;
+         border-top: 1px solid #dee2e6;
+         /* Removido margin-top: 20px; que estava causando espaço extra */
+         margin-top: 20px;
+         overflow-y: auto;
+         /* Calcular max-height: 100% da altura da viewport MENOS a altura da navbar */
+         max-height: calc(100vh - 100px); /* Ajuste 100px se a altura da navbar mudar */
+         /* Removido position: absolute; pois não é mais necessário com este cálculo */
+       }
+       .top-navbar .navbar-nav { width: 100%; }
+       .navbar-nav .nav-section-title {
+            font-weight: bold; color: #6c757d; text-transform: uppercase;
+            font-size: 0.875em; padding: 0.5rem 1rem; margin-top: 0.5rem;
+        }
+       .navbar-nav hr.mobile-separator { margin: 0.5rem 1rem; }
+       .content-wrapper { padding: 1rem; }
+    }
+
+    /* Adicionar estilo para remover sublinhado do link do logo */
+    .brand-link {
+      text-decoration: none;
+      color: inherit; /* Herdar cor do texto pai */
+    }
+    .brand-link:hover {
+      color: inherit; /* Manter cor no hover */
     }
   </style>
 </head>
 
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar p-3">
-    <h4 class="text-center mb-4"><%= lang.app_name || 'SmartExpense' %></h4>
+  <!-- Top Navigation Bar (MOBILE ONLY) -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom top-navbar d-lg-none">
+    <div class="container-fluid">
+      <!-- Alterado span para a e adicionado href -->
+      <a class="navbar-brand brand-link" href="/">
+          <h4><%= lang.app_name || 'SmartExpense' %></h4>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavContent" aria-controls="mobileNavContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mobileNavContent">
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <!-- Links duplicados para mobile dropdown -->
+          <li class="nav-item nav-section-title"><%= lang.projects || 'Projects' %></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_project || 'Create Project') ? 'active' : '' %>" href="/projects/create">➕ <%= lang.new_project || 'New project' %></a></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.projects || 'Projects') ? 'active' : '' %>" href="/projects">📚 <%= lang.projects || 'Projects' %></a></li>
+          <li class="nav-item"><hr class="mobile-separator"></li>
+          <li class="nav-item nav-section-title"><%= lang.templates || 'Templates' %></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_template || 'Create Template') ? 'active' : '' %>" href="/templates/create">➕ <%= lang.new_template || 'New template' %></a></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.templates || 'Templates') ? 'active' : '' %>" href="/templates">📄 <%= lang.templates || 'Templates' %></a></li>
+          <li class="nav-item"><hr class="mobile-separator"></li>
+          <li class="nav-item nav-section-title"><%= lang.system || 'System' %></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">💳 <%= lang.payment_methods || 'Payment Methods' %></a></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">💰 <%= lang.income_sources || 'Income Sources' %></a></li>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">🤝 <%= lang.creditors || 'Creditors' %></a></li>
+          <% if ((locals.user && locals.user.role === 'admin') || locals.DEV_MODE) { %>
+            <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.users || 'Users') ? 'active' : '' %>" href="/users">👥 <%= lang.users || 'Users' %></a></li>
+          <% } %>
+          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.settings || 'Settings') ? 'active' : '' %>" href="/settings">⚙️ <%= lang.settings || 'Settings' %></a></li>
+          <li class="nav-item"><a class="nav-link" href="/logout">🔴 <%= lang.logout || 'Logout' %></a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Desktop Sidebar (DESKTOP ONLY) -->
+  <div class="desktop-sidebar d-none d-lg-flex" id="desktopSidebar">
+    <!-- Adicionado link em volta do h4 -->
+    <a href="/" class="brand-link">
+      <div class="sidebar-header brand-header-common">
+          <h4><%= lang.app_name || 'SmartExpense' %></h4>
+      </div>
+    </a>
     <nav class="nav flex-column">
-
-      <!-- Projects Section -->
-      <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.projects || 'Projects' %></span>
-      <!-- Link to create project page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_project || 'Create Project') ? 'active' : '' %>" href="/projects/create">➕ <%= lang.new_project || 'New project' %></a>
-      <!-- Link to projects list page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.projects || 'Projects') ? 'active' : '' %>" href="/projects">📚 <%= lang.projects || 'Projects' %></a>
+      <!-- Links duplicados para desktop sidebar -->
+      <span class="nav-section-title"><%= lang.projects || 'Projects' %></span>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_project || 'Create Project') ? 'active' : '' %>" href="/projects/create">
+        ➕ <span class="link-text"><%= lang.new_project || 'New project' %></span>
+      </a>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.projects || 'Projects') ? 'active' : '' %>" href="/projects">
+        📚 <span class="link-text"><%= lang.projects || 'Projects' %></span>
+      </a>
       <hr>
-
-      <!-- Templates Section -->
-      <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.templates || 'Templates' %></span>
-       <!-- Link to create template page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_template || 'Create Template') ? 'active' : '' %>" href="/templates/create">➕ <%= lang.new_template || 'New template' %></a>
-       <!-- Link to templates list page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.templates || 'Templates') ? 'active' : '' %>" href="/templates">📄 <%= lang.templates || 'Templates' %></a>
+      <span class="nav-section-title"><%= lang.templates || 'Templates' %></span>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_template || 'Create Template') ? 'active' : '' %>" href="/templates/create">
+        ➕ <span class="link-text"><%= lang.new_template || 'New template' %></span>
+      </a>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.templates || 'Templates') ? 'active' : '' %>" href="/templates">
+        📄 <span class="link-text"><%= lang.templates || 'Templates' %></span>
+      </a>
       <hr>
-
-      <!-- System Section -->
-      <span class="fw-bold text-secondary text-uppercase small mb-1"><%= lang.system || 'System' %></span>
-      <!-- Link to Payment Methods page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">💳 <%= lang.payment_methods || 'Payment Methods' %></a>
-      <!-- Link to Income Sources page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">💰 <%= lang.income_sources || 'Income Sources' %></a>
-      <!-- Link to Creditors page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">🤝 <%= lang.creditors || 'Creditors' %></a>
-
-      <!-- Conditional Users Link (Show only for Admins or in Development Mode) -->
+      <span class="nav-section-title"><%= lang.system || 'System' %></span>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">
+        💳 <span class="link-text"><%= lang.payment_methods || 'Payment Methods' %></span>
+      </a>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">
+        💰 <span class="link-text"><%= lang.income_sources || 'Income Sources' %></span>
+      </a>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">
+        🤝 <span class="link-text"><%= lang.creditors || 'Creditors' %></span>
+      </a>
       <% if ((locals.user && locals.user.role === 'admin') || locals.DEV_MODE) { %>
-        <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.users || 'Users') ? 'active' : '' %>" href="/users">👥 <%= lang.users || 'Users' %></a>
+        <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.users || 'Users') ? 'active' : '' %>" href="/users">
+          👥 <span class="link-text"><%= lang.users || 'Users' %></span>
+        </a>
       <% } %>
-
-      <!-- Settings and Logout -->
-       <!-- Link to Settings page -->
-      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.settings || 'Settings') ? 'active' : '' %>" href="/settings">⚙️ <%= lang.settings || 'Settings' %></a>
-       <!-- Logout Link -->
-      <a class="nav-link" href="/logout">🔴 <%= lang.logout || 'Logout' %></a>
+      <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.settings || 'Settings') ? 'active' : '' %>" href="/settings">
+        ⚙️ <span class="link-text"><%= lang.settings || 'Settings' %></span>
+      </a>
+      <a class="nav-link" href="/logout">
+        🔴 <span class="link-text"><%= lang.logout || 'Logout' %></span>
+      </a>
     </nav>
   </div>
 
   <!-- Main Content Area -->
-  <div class="content">
-    <!-- Include Flash Messages Partial -->
-    <%- include('partials/flash_messages') %>
-    <!-- Render the specific page content here -->
-    <%- body %>
+  <div class="content-wrapper">
+      <%- include('partials/flash_messages') %>
+      <%- body %>
   </div>
 
   <!-- SCRIPTS Globais -->
   <script src="/js/jquery/jquery.min.js"></script>
   <script src="/js/store/store.legacy.min.js"></script>
   <script src="/libs/jquery-resizable-columns/jquery.resizableColumns.min.js"></script>
-  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script> <!-- Bootstrap JS handles collapse -->
   <script src="/libs/bootstrap-table/bootstrap-table.min.js"></script>
   <script src="/libs/bootstrap-table/extensions/resizable/bootstrap-table-resizable.min.js"></script>
-  <!-- Optional: Bootstrap Table Locale -->
   <% if (config.DEFAULT_LOCALE === 'pt') { %>
     <script src="/libs/bootstrap-table/locale/bootstrap-table-pt-BR.min.js"></script>
   <% } else if (config.DEFAULT_LOCALE === 'fr') { %>
     <script src="/libs/bootstrap-table/locale/bootstrap-table-fr-FR.min.js"></script>
   <% } %>
-  <!-- Add other locales as needed -->
 
   <!-- Placeholder para scripts -->
   <% if (typeof script !== 'undefined') { %>

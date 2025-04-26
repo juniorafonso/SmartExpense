@@ -1,0 +1,89 @@
+<!-- Modal Styles (pode mover para layout.ejs ou um arquivo CSS global) -->
+<style>
+  .custom-form-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); z-index: 1040; display: none;
+  }
+  .custom-form-container {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background-color: white; border: 1px solid #dee2e6; border-radius: 0.3rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); padding: 1.5rem;
+    width: 90%; max-width: 600px; z-index: 1045; display: none;
+    max-height: 90vh; overflow-y: auto;
+  }
+</style>
+
+<!-- Modal Add Expense Shortcut -->
+<div id="formAddExpenseShortcutOverlay" class="custom-form-overlay" onclick="closeForms()"></div>
+<div id="formAddExpenseShortcutContainer" class="custom-form-container">
+  <h5 class="mb-3"><%= lang.add_expense || 'Add Expense' %></h5>
+  <!-- O action será definido via JS -->
+  <form id="addExpenseShortcutForm" method="POST" enctype="multipart/form-data">
+    <div class="row g-3">
+      <!-- SELEÇÃO DE PROJETO -->
+      <div class="col-12 mb-3">
+        <label for="add_expense_project_name" class="form-label"><%= lang.project || 'Project' %>*</label>
+        <select class="form-select" id="add_expense_project_name" name="project_name" required>
+          <option value="" disabled selected><%= lang.select_project || 'Select a project...' %></option>
+          <% if (typeof activeProjects !== 'undefined' && activeProjects && activeProjects.length > 0) { %>
+            <% activeProjects.forEach(project => { %>
+              <option value="<%= project.name %>"><%= project.name %></option>
+            <% }) %>
+          <% } else { %>
+            <option value="" disabled><%= lang.no_active_projects || 'No active projects available' %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Campos copiados de project.ejs formAddExpense -->
+      <div class="col-md-6 mb-3">
+        <label for="add_expense_name" class="form-label"><%= lang.name || 'Name' %>*</label>
+        <input type="text" class="form-control" id="add_expense_name" name="name" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="add_expense_amount" class="form-label"><%= lang.amount || 'Amount' %>*</label>
+        <input type="number" step="0.01" class="form-control" id="add_expense_amount" name="amount" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="add_expense_date" class="form-label"><%= lang.date || 'Date' %>*</label>
+        <input type="date" class="form-control" id="add_expense_date" name="date" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="add_expense_type" class="form-label"><%= lang.type || 'Type' %>*</label>
+        <select class="form-select" id="add_expense_type" name="type" required>
+          <option value="fixed"><%= lang.fixed || 'Fixed' %></option>
+          <option value="one-time"><%= lang.one_time || 'One-time' %></option>
+        </select>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="add_expense_creditor_id" class="form-label"><%= lang.creditor_name || 'Creditor' %></label>
+        <% if (typeof creditors !== 'undefined' && creditors && creditors.length > 0) { %>
+          <select name="creditor_id" id="add_expense_creditor_id" class="form-select">
+            <option value=""><%= lang.select_creditor || 'Select a creditor (Optional)' %></option>
+            <% creditors.forEach(creditor => { %>
+              <option value="<%= creditor.id %>"><%= creditor.name %></option>
+            <% }); %>
+          </select>
+        <% } else { %>
+          <p class="text-muted small"><%= lang.no_creditors_add_one || 'No creditors available. Add one in the Creditors section.' %></p>
+        <% } %>
+      </div>
+       <div class="col-md-6 mb-3">
+        <label for="add_expense_iban" class="form-label">IBAN</label>
+        <input type="text" class="form-control" id="add_expense_iban" name="iban">
+      </div>
+      <div class="col-12 mb-3">
+        <label for="add_expense_notes" class="form-label"><%= lang.notes || 'Notes' %></label>
+        <textarea class="form-control" id="add_expense_notes" name="notes" rows="2"></textarea>
+      </div>
+      <div class="col-12 mb-3">
+        <label for="add_expense_file" class="form-label"><%= lang.file || 'File' %></label>
+        <input type="file" class="form-control" id="add_expense_file" name="file">
+      </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-outline-secondary" onclick="closeForms()"><%= lang.cancel || 'Cancel' %></button>
+      <button type="submit" class="btn btn-primary"><%= lang.save || 'Save' %></button>
+    </div>
+  </form>
+</div>
