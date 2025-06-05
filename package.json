@@ -21,9 +21,12 @@
     "express-session": "^1.18.1",
     "jquery": "^3.7.1",
     "jquery-resizable-columns": "^0.2.3",
-    "multer": "^1.4.5-lts.2",
+    "multer": "^2.0.1",
     "node-fetch": "^3.3.2",
     "sqlite3": "^5.1.7",
     "store-js": "^2.0.4"
+  },
+  "resolutions": {
+    "tar-fs": "3.0.9"
   }
 }

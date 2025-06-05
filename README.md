@@ -104,4 +104,4 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
 
 ## 📄 License
 
-(Specify your license here, e.g., MIT License)
+MIT License
