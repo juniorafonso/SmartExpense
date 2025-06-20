@@ -1,48 +1,100 @@
-<div class="container">
+<div class="min-vh-100 d-flex align-items-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
   <style>
-    body {
-      background-color: #f8f9fa;
+    .login-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(233, 236, 239, 0.3);
     }
-    .card {
-      margin-top: 50px;
-      border: none;
-      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+    .login-header {
+      color: #495057;
+      font-weight: 700;
+      font-size: 2.5rem;
     }
-    .card-title {
-      font-weight: bold;
-      color: #343a40;
+    .form-control {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background-color: #ffffff;
+    }
+    .form-control:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+      background-color: #ffffff;
     }
     .form-label {
+      font-weight: 600;
       color: #495057;
+      margin-bottom: 8px;
     }
-    .btn-primary {
-      background-color: #007bff;
+    .btn-login {
+      background: #007bff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .btn-login:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 123, 255, 0.25);
+    }
+    .language-selector {
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .language-selector:focus {
       border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+      background-color: #ffffff;
     }
-    .btn-primary:hover {
-      background-color: #0069d9;
-      border-color: #0062cc;
+    .app-logo {
+      width: 80px;
+      height: 80px;
+      background: #007bff;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 2rem;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
     }
   </style>
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-body">
-          <h1 class="card-title text-center mb-4"><%= lang.app_name %> - <%= lang.login_title %></h1>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="login-card p-4">
+          <div class="app-logo">
+            S
+          </div>
+          <h1 class="login-header text-center mb-4"><%= lang.app_name %></h1>
+          <p class="text-center text-muted mb-4"><%= lang.login_title %></p>
           <form action="/login" method="POST">
-            <div class="mb-3">
+            <div class="mb-4">
               <label for="username" class="form-label"><%= lang.username %></label>
-              <input type="text" class="form-control" id="username" name="username" required>
+              <input type="text" class="form-control" id="username" name="username" required placeholder="<%= lang.username %>">
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
               <label for="password" class="form-label"><%= lang.password %></label>
-              <input type="password" class="form-control" id="password" name="password" required>
+              <input type="password" class="form-control" id="password" name="password" required placeholder="<%= lang.password %>">
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
               <label for="language" class="form-label"><%= lang.select_language %></label>
-              <select class="form-select" id="language" name="language">
+              <select class="form-select language-selector" id="language" name="language">
+                <option value="en" selected>English</option>
                 <option value="pt">Português</option>
-                <option value="en">English</option>
                 <option value="fr">Français</option>
               </select>
             </div>
@@ -56,7 +108,7 @@
               </div>
             <% } %>
             <div class="d-grid">
-              <button type="submit" class="btn btn-primary"><%= lang.login %></button>
+              <button type="submit" class="btn btn-login text-white"><%= lang.login %></button>
             </div>
           </form>
         </div>

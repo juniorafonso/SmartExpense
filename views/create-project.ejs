@@ -1,28 +1,46 @@
-<h1 class="mb-4">➕ <%= lang.new_project || 'New project' %></h1>
+<!-- Create Project Header -->
+<div class="d-flex justify-content-between align-items-center mb-5">
+  <div>
+    <h1 class="mb-2" style="color: #495057; font-weight: 700;"><i class="bi bi-plus-circle me-2"></i><%= lang.new_project || 'New project' %></h1>
+    <p class="text-muted mb-0">Create a new expense project to organize your finances.</p>
+  </div>
+  <a href="/projects" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-2"></i><%= lang.back || 'Back' %>
+  </a>
+</div>
 
 <!-- Form to create a new project -->
-<form action="/projects/create" method="POST" class="bg-white border rounded p-4" style="width: 100%;">
-  <div class="mb-3">
-    <!-- Project Name Input -->
-    <label for="project_name" class="form-label"><%= lang.project_name || 'Project Name' %>*</label>
-    <input type="text" class="form-control" id="project_name" name="name" placeholder="<%= lang.enter_project_name || 'Enter project name...' %>" required>
+<div class="modern-card p-5">
+  <form action="/projects/create" method="POST">
+    <div class="mb-4">
+      <!-- Project Name Input -->
+      <label for="project_name" class="form-label"><%= lang.project_name || 'Project Name' %> *</label>
+      <input type="text" class="form-control" id="project_name" name="name" placeholder="<%= lang.enter_project_name || 'Enter project name...' %>" required>
+    </div>
  
-    <label for="template_select" class="form-label" style="margin-top: 5px;"><%= lang.template || 'Template' %></label>
-    <select class="form-select" id="template_select" name="template_id">
-      <option value="" selected><%= lang.select_template_optional || 'Select a template...' %></option>
-      <% if (templates && templates.length > 0) { %>
-          <% templates.forEach(template => { %>
-            <option value="<%= template.id %>"><%= template.name %></option>
-          <% }) %>
-      <% } else { %>
-          <option value="" disabled><%= lang.no_templates_available || 'No templates available' %></option>
-      <% } %>
-    </select>
-     <div class="form-text"><%= lang.template_help || 'If selected, expenses from the template will be added to the new project.' %></div>
-  </div>
+    <div class="mb-4">
+      <label for="template_select" class="form-label"><%= lang.template || 'Template' %></label>
+      <select class="form-select" id="template_select" name="template_id">
+        <option value="" selected><%= lang.select_template_optional || 'Select a template...' %></option>
+        <% if (templates && templates.length > 0) { %>
+            <% templates.forEach(template => { %>
+              <option value="<%= template.id %>"><%= template.name %></option>
+            <% }) %>
+        <% } else { %>
+            <option value="" disabled><%= lang.no_templates_available || 'No templates available' %></option>
+        <% } %>
+      </select>
+      <div class="form-text"><%= lang.template_help || 'If selected, expenses from the template will be added to the new project.' %></div>
+    </div>
 
-  <!-- Form Actions -->
-  <div class="d-flex justify-content-between">
-    <button type="submit" class="btn btn-primary"><%= lang.create || 'Create' %></button>
-  </div>
-</form>
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-3">
+      <a href="/projects" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg me-2"></i><%= lang.cancel || 'Cancel' %>
+      </a>
+      <button type="submit" class="btn btn-modern btn-primary">
+        <i class="bi bi-plus-circle me-2"></i><%= lang.create || 'Create' %>
+      </button>
+    </div>
+  </form>
+</div>

@@ -15,12 +15,18 @@ module.exports = (db, upload, authMiddleware) => {
       if (err) {
           console.error('[GET /templates] Error fetching templates:', err.message);
           req.flash('error', lang.error_fetching_templates || 'Error fetching templates.');
-          return res.render('templates', { templates: [] }); // Render with empty array on error
+          return res.render('templates', { 
+            title: lang.templates || 'Templates',
+            templates: [] 
+          }); // Render with empty array on error
       }
 
       // If no templates found, render immediately
       if (!templates || templates.length === 0) {
-        return res.render('templates', { templates: [] });
+        return res.render('templates', { 
+          title: lang.templates || 'Templates',
+          templates: [] 
+        });
       }
 
       // Create promises to count expenses for each template
@@ -43,20 +49,29 @@ module.exports = (db, upload, authMiddleware) => {
       Promise.all(promises)
           .then(templatesWithCount => {
               // Render the 'templates.ejs' view with the templates array including counts
-              res.render('templates', { templates: templatesWithCount });
+              res.render('templates', { 
+                title: lang.templates || 'Templates',
+                templates: templatesWithCount 
+              });
           })
           .catch(error => {
               // Handle errors during the counting process
               console.error('[GET /templates] Error processing expense counts:', error);
               req.flash('error', lang.error_loading_templates || 'Error loading template data.');
-              res.render('templates', { templates: [] }); // Render with empty array on error
+              res.render('templates', { 
+                title: lang.templates || 'Templates',
+                templates: [] 
+              }); // Render with empty array on error
           });
     });
   });
 
   // GET /templates/create (Display form to create a new template)
   router.get('/create', requireLogin, (req, res) => {
-    res.render('create-template'); // Render 'create-template.ejs' view
+    const lang = res.locals.lang;
+    res.render('create-template', {
+      title: lang.create_template || 'Create Template'
+    }); // Render 'create-template.ejs' view
   });
 
   // POST /templates (Create a new template - only the name)
@@ -137,6 +152,7 @@ module.exports = (db, upload, authMiddleware) => {
     .then(([template, expenses, creditors]) => {
         // Render the 'template.ejs' view with fetched data
         res.render('template', {
+            title: `${lang.template || 'Template'}: ${template.name}`,
             template,
             expenses,
             creditors

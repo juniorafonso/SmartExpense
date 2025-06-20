@@ -1,14 +1,22 @@
-<%# Seção Projetos em Andamento %>
-<h1 class="mb-4">📚 <%= lang.projects || 'Projects' %></h1>
+<!-- Projects Header -->
+<div class="d-flex justify-content-between align-items-center mb-5">
+  <div>
+    <h1 class="mb-2" style="color: #495057; font-weight: 700;"><i class="bi bi-collection me-2"></i><%= lang.projects || 'Projects' %></h1>
+    <p class="text-muted mb-0">Manage your expense projects and track progress.</p>
+  </div>
+  <a href="/projects/create" class="btn btn-modern btn-primary btn-lg">
+    <i class="bi bi-plus-circle-fill me-2"></i><%= lang.create_project || 'Create Project' %>
+  </a>
+</div>
 
-<!-- Button to navigate to create project page -->
-<a href="/projects/create" class="btn btn-primary" style="margin-bottom: 15px;"><%= lang.create_project || 'Create Project' %></a>
-
-<div class="bg-white border rounded p-3 mb-4">
-  <h3 class="mb-3">📋 <%= lang.in_progress || 'In progress' %></h3>
+<!-- In Progress Projects Table -->
+<div class="bg-white border rounded p-3 shadow-sm mb-4">
+  <h3 class="mb-4" style="color: #007bff; font-weight: 600;">
+    <i class="bi bi-play-circle-fill me-2"></i><%= lang.in_progress || 'In progress' %>
+  </h3>
   <% if (activeProjects && activeProjects.length > 0) { %>
-    
-      <table class="table">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
         <thead>
           <tr>
             <th style="width: 40%;"><%= lang.name || 'Name' %></th>
@@ -33,7 +41,7 @@
               </td>
               <td class="text-center">
                 <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="projectActionsActive-<%= project.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="projectActionsActive-<%= project.id %>" data-bs-toggle="dropdown" data-bs-container="body" aria-expanded="false">
                     <%= lang.actions || 'Actions' %>
                   </button>
                   <ul class="dropdown-menu" aria-labelledby="projectActionsActive-<%= project.id %>">
@@ -61,18 +69,24 @@
           <% }); %>
         </tbody>
       </table>
+    </div>
     
   <% } else { %>
-    <p class="text-muted"><%= lang.no_active_projects || 'No projects in progress.' %></p>
+    <div class="text-center py-5">
+      <i class="bi bi-folder2-open" style="font-size: 3rem; color: #dee2e6;"></i>
+      <p class="text-muted mt-3 mb-0"><%= lang.no_active_projects || 'No projects in progress.' %></p>
+    </div>
   <% } %>
 </div>
 
-<%# Seção Projetos Finalizados %>
-<div class="bg-white border rounded p-3 mb-4">
-  <h3 class="mb-3">✅ <%= lang.finished || 'Finished' %></h3>
+<!-- Finished Projects Table -->
+<div class="bg-white border rounded p-3 shadow-sm mb-4">
+  <h3 class="mb-4" style="color: #17a2b8; font-weight: 600;">
+    <i class="bi bi-check-circle-fill me-2"></i><%= lang.finished || 'Finished' %>
+  </h3>
   <% if (finishedProjects && finishedProjects.length > 0) { %>
-    
-      <table class="table">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
         <thead>
           <tr>
             <th style="width: 40%;"><%= lang.name || 'Name' %></th>
@@ -97,7 +111,7 @@
               </td>
               <td class="text-center">
                 <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="projectActionsFinished-<%= project.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="projectActionsFinished-<%= project.id %>" data-bs-toggle="dropdown" data-bs-container="body" aria-expanded="false">
                     <%= lang.actions || 'Actions' %>
                   </button>
                   <ul class="dropdown-menu" aria-labelledby="projectActionsFinished-<%= project.id %>">
@@ -125,16 +139,20 @@
           <% }); %>
         </tbody>
       </table>
+    </div>
     
   <% } else { %>
-    <p class="text-muted"><%= lang.no_finished_projects || 'No finished projects.' %></p>
+    <div class="text-center py-5">
+      <i class="bi bi-check-circle" style="font-size: 3rem; color: #dee2e6;"></i>
+      <p class="text-muted mt-3 mb-0"><%= lang.no_finished_projects || 'No finished projects.' %></p>
+    </div>
   <% } %>
 </div>
 
 <!-- Include the Edit Project Modal -->
 <%- include('modals/edit-project-modal') %>
 
-<!-- JavaScript for Edit Project Modal -->
+<!-- JavaScript for Edit Project Modal and Dropdown Fix -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const editProjectModalElement = document.getElementById('editProjectModal');
@@ -162,6 +180,30 @@
         if(editProjectStatusSelect) editProjectStatusSelect.value = projectStatus;
       });
     }
+
+    // Fix for dropdowns being cut off
+    document.querySelectorAll('.dropdown-toggle[data-bs-container="body"]').forEach(function(dropdownToggle) {
+      dropdownToggle.addEventListener('show.bs.dropdown', function (event) {
+        const buttonId = event.target.id;
+        if (!buttonId) return;
+
+        const dropdownMenu = document.querySelector(`.dropdown-menu[aria-labelledby="${buttonId}"]`);
+        if (!dropdownMenu) return;
+
+        // Move dropdown to body if not already there
+        if (dropdownMenu.parentElement !== document.body) {
+          document.body.appendChild(dropdownMenu);
+        }
+
+        // Force position update
+        setTimeout(() => {
+          const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+          if (dropdownInstance) {
+            dropdownInstance.update();
+          }
+        }, 10);
+      });
+    });
   });
 
   function formatCurrency(value, currencyCode) {

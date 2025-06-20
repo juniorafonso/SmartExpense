@@ -1,18 +1,22 @@
-<h1 class="mb-4">💳 <%= lang.payment_methods || 'Payment Methods' %></h1>
-<div class="mb-3 text-start d-flex gap-2">
-    <button class="btn btn-primary" onclick="showAddModal()">
-        <%= lang.add_payment_method || 'Add Payment Method' %>
-    </button>
+<!-- Payment Methods Header -->
+<div class="d-flex justify-content-between align-items-center mb-5">
+  <div>
+    <h1 class="mb-2" style="color: #495057; font-weight: 700;"><i class="bi bi-credit-card me-2"></i><%= lang.payment_methods || 'Payment Methods' %></h1>
+    <p class="text-muted mb-0">Manage your payment methods and financial accounts.</p>
+  </div>
+  <button class="btn btn-modern btn-primary btn-lg" onclick="showAddModal()">
+    <i class="bi bi-plus-circle-fill me-2"></i><%= lang.add_payment_method || 'Add Payment Method' %>
+  </button>
 </div>
 
 <!-- BLOCK: Bank Accounts -->
 <div class="bg-white border rounded p-3 mb-4"">
-    <h3 class="mb-3">🏦 <%= lang.bank_accounts || 'Bank Accounts' %></h3>
+    <h3 class="mb-3"><i class="bi bi-bank me-2"></i><%= lang.bank_accounts || 'Bank Accounts' %></h3>
     <% const bankAccounts = payments.filter(p => p.payment_type === 'bank_account'); %>
     <% if (bankAccounts.length > 0) { %>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th style="width: 20%;"><%= lang.name || 'Name' %></th>
                     <th style="width: 20%;"><%= lang.bank || 'Bank' %></th>
@@ -51,12 +55,12 @@
 
 <!-- BLOCK: Credit Cards -->
 <div class="bg-white border rounded p-3 mb-4"">
-    <h3 class="mb-3">💳 <%= lang.credit_cards || 'Credit Cards' %></h3>
+    <h3 class="mb-3"><i class="bi bi-credit-card me-2"></i><%= lang.credit_cards || 'Credit Cards' %></h3>
     <% const creditCards = payments.filter(p => p.payment_type === 'credit_card'); %>
     <% if (creditCards.length > 0) { %>
      <div class="table-responsive">
         <table class="table table-hover align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th style="width: 40%;"><%= lang.name || 'Name' %></th>
                     <th style="width: 20%;"><%= lang.bank || 'Bank/Issuer' %></th>
@@ -85,12 +89,12 @@
 
 <!-- BLOCK: Cash -->
 <div class="bg-white border rounded p-3 mb-4"">
-    <h3 class="mb-3">💰 <%= lang.cash || 'Cash' %></h3>
+    <h3 class="mb-3"><i class="bi bi-cash-coin me-2"></i><%= lang.cash || 'Cash' %></h3>
     <% const cash = payments.filter(p => p.payment_type === 'cash'); %>
     <% if (cash.length > 0) { %>
      <div class="table-responsive">
         <table class="table table-hover align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th style="width: 90%;"><%= lang.currency || 'Currency' %></th>
                     <th style="width: 10%;" class="text-center"><%= lang.actions || 'Actions' %></th>
@@ -133,17 +137,17 @@
           <ul class="nav nav-tabs mb-3" id="paymentTypeTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="bank-tab" data-bs-toggle="tab" data-bs-target="#bank-pane" type="button" role="tab" aria-controls="bank-pane" aria-selected="true">
-                🏦 <%= lang.bank_account || 'Bank Account' %>
+                <i class="bi bi-bank me-2"></i><%= lang.bank_account || 'Bank Account' %>
               </button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="card-tab" data-bs-toggle="tab" data-bs-target="#card-pane" type="button" role="tab" aria-controls="card-pane" aria-selected="false">
-                💳 <%= lang.credit_card || 'Credit Card' %>
+                <i class="bi bi-credit-card me-2"></i><%= lang.credit_card || 'Credit Card' %>
               </button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="cash-tab" data-bs-toggle="tab" data-bs-target="#cash-pane" type="button" role="tab" aria-controls="cash-pane" aria-selected="false">
-                💰 <%= lang.cash || 'Cash' %>
+                <i class="bi bi-cash-coin me-2"></i><%= lang.cash || 'Cash' %>
               </button>
             </li>
           </ul>

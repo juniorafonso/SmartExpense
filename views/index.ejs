@@ -1,84 +1,91 @@
-<h1 class="mb-4"><%= lang.dashboard || 'Dashboard' %></h1>
-
-<!-- Quick Action Button -->
-<div class="mb-4">
-  <button class="btn btn-lg btn-success" onclick="showAddExpenseShortcutModal()">
+<!-- Dashboard Header -->
+<div class="d-flex justify-content-between align-items-center mb-5">
+  <div>
+    <h1 class="mb-2" style="color: #495057; font-weight: 700;"><%= lang.dashboard || 'Dashboard' %></h1>
+    <p class="text-muted mb-0">Welcome back! Here's your expense overview.</p>
+  </div>
+  <!-- Quick Action Button -->
+  <button class="btn btn-modern btn-success btn-lg" onclick="showAddExpenseShortcutModal()">
     <i class="bi bi-plus-circle-fill me-2"></i><%= lang.add_expense || 'Add Expense' %>
   </button>
 </div>
 
 <!-- Dashboard Stats -->
-<div class="row mb-4 g-3">
+<div class="row mb-5 g-4">
   <div class="col-md-3 col-sm-6">
-    <div class="card text-center h-100">
-      <div class="card-body">
-        <h5 class="card-title"><%= lang.total_projects || 'Total Projects' %></h5>
-        <p class="card-text fs-4 fw-bold"><%= (typeof stats !== 'undefined' && stats.totalProjects != null) ? stats.totalProjects : 'N/A' %></p>
+    <div class="modern-card text-center h-100 p-4">
+      <div class="mb-3">
+        <i class="bi bi-folder-fill" style="font-size: 2.5rem; color: #007bff;"></i>
       </div>
+      <h5 class="card-title mb-3" style="color: #495057; font-weight: 600;"><%= lang.total_projects || 'Total Projects' %></h5>
+      <p class="fs-2 fw-bold mb-0" style="color: #007bff;"><%= (typeof stats !== 'undefined' && stats.totalProjects != null) ? stats.totalProjects : 'N/A' %></p>
     </div>
   </div>
   <div class="col-md-3 col-sm-6">
-    <div class="card text-center h-100">
-      <div class="card-body">
-        <h5 class="card-title"><%= lang.active_projects || 'Active Projects' %></h5>
-        <p class="card-text fs-4 fw-bold text-success"><%= (typeof stats !== 'undefined' && stats.activeProjects != null) ? stats.activeProjects : 'N/A' %></p>
+    <div class="modern-card text-center h-100 p-4">
+      <div class="mb-3">
+        <i class="bi bi-play-circle-fill" style="font-size: 2.5rem; color: #28a745;"></i>
       </div>
+      <h5 class="card-title mb-3" style="color: #495057; font-weight: 600;"><%= lang.active_projects || 'Active Projects' %></h5>
+      <p class="fs-2 fw-bold mb-0" style="color: #28a745;"><%= (typeof stats !== 'undefined' && stats.activeProjects != null) ? stats.activeProjects : 'N/A' %></p>
     </div>
   </div>
   <div class="col-md-3 col-sm-6">
-    <div class="card text-center h-100">
-      <div class="card-body">
-        <h5 class="card-title"><%= lang.finished_projects || 'Finished Projects' %></h5>
-        <p class="card-text fs-4 fw-bold text-info"><%= (typeof stats !== 'undefined' && stats.finishedProjects != null) ? stats.finishedProjects : 'N/A' %></p>
+    <div class="modern-card text-center h-100 p-4">
+      <div class="mb-3">
+        <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: #17a2b8;"></i>
       </div>
+      <h5 class="card-title mb-3" style="color: #495057; font-weight: 600;"><%= lang.finished_projects || 'Finished Projects' %></h5>
+      <p class="fs-2 fw-bold mb-0" style="color: #17a2b8;"><%= (typeof stats !== 'undefined' && stats.finishedProjects != null) ? stats.finishedProjects : 'N/A' %></p>
     </div>
   </div>
   <div class="col-md-3 col-sm-6">
-    <div class="card text-center h-100">
-      <div class="card-body">
-        <h5 class="card-title"><%= lang.payment_methods || 'Payment Methods' %></h5>
-        <p class="card-text fs-4 fw-bold"><%= (typeof stats !== 'undefined' && stats.paymentMethods != null) ? stats.paymentMethods : 'N/A' %></p>
+    <div class="modern-card text-center h-100 p-4">
+      <div class="mb-3">
+        <i class="bi bi-credit-card-fill" style="font-size: 2.5rem; color: #6c757d;"></i>
       </div>
+      <h5 class="card-title mb-3" style="color: #495057; font-weight: 600;"><%= lang.payment_methods || 'Payment Methods' %></h5>
+      <p class="fs-2 fw-bold mb-0" style="color: #6c757d;"><%= (typeof stats !== 'undefined' && stats.paymentMethods != null) ? stats.paymentMethods : 'N/A' %></p>
     </div>
   </div>
-  <!-- Placeholder para Gráfico -->
-  <!-- ... -->
 </div> <!-- Fim da row dos cards de stats -->
 
 
 <!-- Annual Expense Plan Section -->
 <div class="mt-5">
-  <!-- CORRIGIDO: Fallback para inglês -->
-  <h2 class="mb-3"><%= lang.annual_expense_plan_title || 'Annual Expense Plan' %></h2>
-
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover" id="annualPlanTable">
-      <thead class="table-light">
-        <tr>
-          <th scope="col" style="width: 15%;"><%= lang.month_year || 'Month/Year' %></th>
-          <th scope="col"><%= lang.expense_name || 'Expense Name' %></th>
-          <th scope="col" style="width: 15%;" class="text-end"><%= lang.expense || 'Expense' %> (<%= config.DEFAULT_CURRENCY || 'CUR' %>)</th>
-          <th scope="col" style="width: 15%;" class="text-end"><%= lang.deposit || 'Deposit' %> (<%= config.DEFAULT_CURRENCY || 'CUR' %>)</th>
-          <th scope="col" style="width: 15%;" class="text-end"><%= lang.balance || 'Balance' %> (<%= config.DEFAULT_CURRENCY || 'CUR' %>)</th>
-          <th scope="col" style="width: 10%;" class="text-center"><%= lang.actions || 'Actions' %></th>
-        </tr>
-      </thead>
-      <tbody id="annualPlanTableBody">
-        <!-- Linhas serão adicionadas dinamicamente via JS -->
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="4" class="text-end fw-bold"><%= lang.final_balance || 'Final Balance' %>:</td>
-          <td id="finalBalance" class="text-end fw-bold">0.00</td>
-          <td></td> <!-- Célula vazia para alinhar com a coluna Actions -->
-        </tr>
-      </tfoot>
-    </table>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="color: #495057; font-weight: 700;"><%= lang.annual_expense_plan_title || 'Annual Expense Plan' %></h2>
+    <button class="btn btn-modern btn-primary" id="addPlanRow">
+      <i class="bi bi-plus-lg me-2"></i><%= lang.add_row || 'Add Row' %>
+    </button>
   </div>
 
-  <button class="btn btn-primary mt-3" id="addPlanRow">
-    <i class="bi bi-plus-lg me-2"></i><%= lang.add_row || 'Add Row' %>
-  </button>
+  <div class="modern-card p-4">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="annualPlanTable">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 15%;"><%= lang.month_year || 'Month/Year' %></th>
+            <th scope="col"><%= lang.expense_name || 'Expense Name' %></th>
+            <th scope="col" style="width: 15%;" class="text-end"><%= lang.expense || 'Expense' %> (<%= config.DEFAULT_CURRENCY || 'CUR' %>)</th>
+            <th scope="col" style="width: 15%;" class="text-end"><%= lang.deposit || 'Deposit' %> (<%= config.DEFAULT_CURRENCY || 'CUR' %>)</th>
+            <th scope="col" style="width: 15%;" class="text-end"><%= lang.balance || 'Balance' %> (<%= config.DEFAULT_CURRENCY || 'CUR' %>)</th>
+            <th scope="col" style="width: 10%;" class="text-center"><%= lang.actions || 'Actions' %></th>
+          </tr>
+        </thead>
+        <tbody id="annualPlanTableBody">
+          <!-- Linhas serão adicionadas dinamicamente via JS -->
+        </tbody>
+        <tfoot>
+          <tr style="background: #f8f9fa; border-top: 2px solid #e9ecef;">
+            <td colspan="4" class="text-end fw-bold" style="color: #007bff;"><%= lang.final_balance || 'Final Balance' %>:</td>
+            <td id="finalBalance" class="text-end fw-bold" style="color: #007bff;">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
 </div>
 <!-- Fim da Annual Expense Plan Section -->
 
@@ -256,6 +263,8 @@
     tr.dataset.id = data.id || '';
     const moveUpText = lang.move_up || 'Move Up';
     const moveDownText = lang.move_down || 'Move Down';
+    const addAboveText = lang.add_row_above || 'Add Row Above';
+    const addBelowText = lang.add_row_below || 'Add Row Below';
     const editText = lang.edit || 'Edit';
     const deleteText = lang.delete || 'Delete';
     const displayExpense = formatCurrency(data.expense_amount || 0);
@@ -275,6 +284,9 @@
             <i class="bi bi-gear-fill"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item btn-add-above" type="button"><i class="bi bi-plus-circle me-2"></i>${addAboveText}</button></li>
+            <li><button class="dropdown-item btn-add-below" type="button"><i class="bi bi-plus-circle me-2"></i>${addBelowText}</button></li>
+            <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item btn-move-up" type="button"><i class="bi bi-arrow-up me-2"></i>${moveUpText}</button></li>
             <li><button class="dropdown-item btn-move-down" type="button"><i class="bi bi-arrow-down me-2"></i>${moveDownText}</button></li>
             <li><hr class="dropdown-divider"></li>
@@ -335,7 +347,11 @@
   tableBody.addEventListener('click', (event) => {
       const button = event.target.closest('button');
       if (!button) return;
-      if (button.classList.contains('btn-move-up')) {
+      if (button.classList.contains('btn-add-above')) {
+          handleAddAbove(button);
+      } else if (button.classList.contains('btn-add-below')) {
+          handleAddBelow(button);
+      } else if (button.classList.contains('btn-move-up')) {
           handleMoveUp(button);
       } else if (button.classList.contains('btn-move-down')) {
           handleMoveDown(button);
@@ -347,6 +363,61 @@
   });
 
   // --- Funções de Ação ---
+  async function handleAddAbove(button) {
+      const currentRow = button.closest('tr');
+      if (!currentRow) return;
+      
+      try {
+          const response = await fetch('/api/annual-plan', { method: 'POST' });
+          if (!response.ok) {
+              let errorData = { message: `HTTP error! status: ${response.status}` };
+              try { errorData = await response.json(); } catch (e) { /* ignore */ }
+              console.error("Failed to add row on server:", errorData);
+              throw new Error(errorData.message || 'Failed to add row on server');
+          }
+          const newRowData = await response.json();
+          const newRow = createTableRow(newRowData);
+          
+          // Insert the new row BEFORE the current row
+          tableBody.insertBefore(newRow, currentRow);
+          updateBalances();
+          newRow.querySelector('.month-year')?.focus();
+      } catch (error) {
+          console.error("Error adding new row above:", error);
+          alert(lang.error_adding_data || 'Error adding row.');
+      }
+  }
+
+  async function handleAddBelow(button) {
+      const currentRow = button.closest('tr');
+      if (!currentRow) return;
+      
+      try {
+          const response = await fetch('/api/annual-plan', { method: 'POST' });
+          if (!response.ok) {
+              let errorData = { message: `HTTP error! status: ${response.status}` };
+              try { errorData = await response.json(); } catch (e) { /* ignore */ }
+              console.error("Failed to add row on server:", errorData);
+              throw new Error(errorData.message || 'Failed to add row on server');
+          }
+          const newRowData = await response.json();
+          const newRow = createTableRow(newRowData);
+          
+          // Insert the new row AFTER the current row
+          const nextRow = currentRow.nextElementSibling;
+          if (nextRow) {
+              tableBody.insertBefore(newRow, nextRow);
+          } else {
+              tableBody.appendChild(newRow);
+          }
+          updateBalances();
+          newRow.querySelector('.month-year')?.focus();
+      } catch (error) {
+          console.error("Error adding new row below:", error);
+          alert(lang.error_adding_data || 'Error adding row.');
+      }
+  }
+
   async function handleDelete(button) {
       const row = button.closest('tr');
       const rowId = row?.dataset.id;

@@ -10,27 +10,90 @@
   <!-- Inline styles specific to the login page -->
   <style>
     body {
-      background-color: #f8f9fa; /* Light gray background */
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .card {
-      margin-top: 50px; /* Space from top */
-      border: none; /* Remove default border */
-      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05); /* Subtle shadow */
+    .login-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(233, 236, 239, 0.3);
     }
-    .card-title {
-      font-weight: bold;
-      color: #343a40; /* Dark gray title */
+    .login-header {
+      color: #495057;
+      font-weight: 700;
+      font-size: 2.5rem;
+    }
+    .form-control {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background-color: #ffffff;
+    }
+    .form-control:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+      background-color: #ffffff;
     }
     .form-label {
-      color: #495057; /* Medium gray label */
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
     }
-    .btn-primary {
-      background-color: #007bff; /* Standard Bootstrap blue */
+    .btn-login {
+      background: #007bff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .btn-login:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 123, 255, 0.25);
+    }
+    .language-selector {
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .language-selector:focus {
       border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+      background-color: #ffffff;
     }
-    .btn-primary:hover {
-      background-color: #0069d9; /* Darker blue on hover */
-      border-color: #0062cc;
+    .app-logo {
+      width: 80px;
+      height: 80px;
+      background: #007bff;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 2rem;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+    }
+    .alert {
+      border-radius: 12px;
+      border: none;
+      margin-bottom: 20px;
+    }
+    .alert-danger {
+      background: #dc3545;
+      color: white;
+      font-weight: 500;
     }
   </style>
 </head>

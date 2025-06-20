@@ -17,29 +17,92 @@
   <!-- Custom Styles -->
   <style>
     body {
-      background-color: #f8f9fa; /* Light background */
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      min-height: 100vh;
+    }
+
+    /* --- Modern Card Styles --- */
+    .modern-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(233, 236, 239, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+    }
+    .modern-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- Modern Button Styles --- */
+    .btn-modern {
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+    }
+    .btn-modern:hover {
+      transform: translateY(-2px);
+    }
+    .btn-modern.btn-primary {
+      background: #007bff;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+    }
+    .btn-modern.btn-primary:hover {
+      background: #0056b3;
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+    }
+    .btn-modern.btn-success {
+      background: #28a745;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+    }
+    .btn-modern.btn-success:hover {
+      background: #1e7e34;
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
     }
 
     /* --- Desktop Sidebar Styles --- */
     .desktop-sidebar {
-      width: 250px; min-width: 250px; height: 100vh;
+      width: 260px; min-width: 260px; height: 100vh;
       position: fixed; top: 0; left: 0;
-      background-color: #fff; border-right: 1px solid #dee2e6;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(233, 236, 239, 0.4);
       display: flex; flex-direction: column;
       z-index: 1030;
       overflow: hidden;
       box-sizing: border-box;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
     }
     /* Estilo unificado para o header/brand */
     .brand-header-common {
-        /* AUMENTADO o padding vertical (top/bottom) */
-        padding: 1.5rem 1rem; /* Exemplo: Aumentado de 0.81rem para 1.5rem */
-        border-bottom: 1px solid #dee2e6;
+        padding: 2rem 1rem;
+        border-bottom: 1px solid rgba(233, 236, 239, 0.4);
         text-align: center;
-        font-size: 1.5rem; /* Mantido o tamanho da fonte aumentado */
-        font-weight: 500;
+        font-size: 1.6rem;
+        font-weight: 700;
         line-height: 1.2;
         margin-bottom: 0;
+        color: #007bff;
+        background: linear-gradient(135deg, rgba(0, 123, 255, 0.08) 0%, rgba(0, 123, 255, 0.03) 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    .brand-header-common::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -50%;
+        width: 200%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+    .brand-link:hover .brand-header-common::before {
+        transform: translateX(100%);
     }
     .desktop-sidebar .sidebar-header h4,
     .top-navbar .navbar-brand h4 {
@@ -61,27 +124,74 @@
       scrollbar-gutter: stable;
     }
     .desktop-sidebar .nav-link {
-      color: #333;
-      padding: 0.5rem 1rem 0.5rem 1rem;
+      color: #495057;
+      padding: 0.75rem 1rem;
       margin-bottom: 0.25rem;
       box-sizing: border-box;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      width: 100%;           /* Força o link a ocupar toda a largura do nav */
-      max-width: 100%;       /* Não deixa crescer além do nav */
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 100%;
       overflow: hidden;
       justify-content: flex-start;
       flex-shrink: 0;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
-    .desktop-sidebar .nav-link:hover,
-    .desktop-sidebar .nav-link.active { background-color: #e9ecef; color: #000; border-radius: 0.25rem; }
-    .desktop-sidebar .nav-link.active { font-weight: bold; }
-    .desktop-sidebar hr { margin: 1rem 0; }
+    .desktop-sidebar .nav-link:hover {
+      background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
+      color: #007bff;
+      transform: translateX(4px);
+    }
+    .desktop-sidebar .nav-link.active {
+      background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
+      color: #007bff;
+      font-weight: 600;
+      transform: translateX(4px);
+    }
+    .desktop-sidebar hr { 
+      margin: 1.5rem 1rem; 
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 123, 255, 0.3), transparent);
+      opacity: 0.6;
+    }
     .desktop-sidebar .nav-section-title {
-        font-weight: bold; color: #6c757d; text-transform: uppercase;
-        font-size: 0.875em; padding: 0 1rem 0.5rem 1rem;
+        font-weight: 700; 
+        color: #007bff; 
+        text-transform: uppercase;
+        font-size: 0.75rem; 
+        padding: 1rem 1rem 0.5rem 1rem;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
     }
+    .desktop-sidebar .nav-section-title i {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    /* Ícones modernos do menu */
+    .desktop-sidebar .nav-icon {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+    .desktop-sidebar .nav-link:hover .nav-icon {
+      transform: scale(1.1);
+    }
+    .desktop-sidebar .nav-link.active .nav-icon {
+      color: #007bff;
+    }
+    
     /* Controlar o texto dentro do span */
     .desktop-sidebar .nav-link .link-text {
       flex-grow: 1;
@@ -95,11 +205,181 @@
     }
 
     /* --- Content Area Styles --- */
-    .content-wrapper { padding: 1.5rem; }
+    .content-wrapper { 
+      padding: 2rem; 
+      background: transparent;
+    }
+    
+    /* --- Modern Form Styles --- */
+    .form-control {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+    .form-control:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+      background-color: #ffffff;
+    }
+    
+    /* --- Modern Table Styles - Cinza Claro --- */
+    .table {
+      background: #ffffff;
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      margin-bottom: 0;
+    }
+    .table thead th {
+      background: #f8f9fa;
+      color: #495057;
+      border: none;
+      font-weight: 600;
+      padding: 1.2rem 1rem;
+      border-bottom: none;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      position: relative;
+    }
+    .table thead th:first-child {
+      border-top-left-radius: 12px;
+    }
+    .table thead th:last-child {
+      border-top-right-radius: 12px;
+    }
+    .table tbody td, .table tbody th {
+      padding: 1rem;
+      border-top: 1px solid #e9ecef;
+      vertical-align: middle;
+      background: #ffffff;
+      transition: background-color 0.2s ease;
+      font-weight: normal;
+    }
+    .table tbody tr:hover td, .table tbody tr:hover th {
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+    }
+    .table tbody tr:last-child td:first-child, .table tbody tr:last-child th:first-child {
+      border-bottom-left-radius: 12px;
+    }
+    .table tbody tr:last-child td:last-child, .table tbody tr:last-child th:last-child {
+      border-bottom-right-radius: 12px;
+    }
+    .table tbody tr:last-child td, .table tbody tr:last-child th {
+      border-bottom: none;
+    }
+    
+    /* Override Bootstrap table-hover black borders */
+    .table-hover > tbody > tr:hover > td,
+    .table-hover > tbody > tr:hover > th {
+      border-color: #e9ecef !important;
+      border-top: 1px solid #e9ecef !important;
+      border-bottom: none !important;
+      border-left: none !important;
+      border-right: none !important;
+    }
+    
+    /* Force override all possible border states */
+    .table-hover tbody tr:hover td,
+    .table-hover tbody tr:hover th,
+    table.table-hover tbody tr:hover td,
+    table.table-hover tbody tr:hover th {
+      border: none !important;
+      border-top: 1px solid #e9ecef !important;
+      border-bottom: none !important;
+      border-left: none !important;
+      border-right: none !important;
+      border-color: #e9ecef !important;
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+    }
+    
+    /* Very specific override for Annual Plan table */
+    #annualPlanTable.table-hover tbody tr:hover td,
+    #annualPlanTable.table-hover tbody tr:hover th,
+    #annualPlanTable tbody tr:hover td,
+    #annualPlanTable tbody tr:hover th {
+      border: none !important;
+      border-top: 1px solid #e9ecef !important;
+      border-bottom: none !important;
+      border-left: none !important;
+      border-right: none !important;
+      border-color: #e9ecef !important;
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+    }
+    
+    /* Override Bootstrap's --bs-table-accent-bg hover effect */
+    .table-hover tbody tr:hover {
+      --bs-table-border-color: #e9ecef !important;
+    }
+    
+    /* Override static table borders (non-hover state) */
+    .table td,
+    .table th {
+      border-color: #e9ecef !important;
+      border-top: 1px solid #e9ecef !important;
+      border-bottom: none !important;
+      border-left: none !important;
+      border-right: none !important;
+    }
+    
+    /* Override Bootstrap table border variables */
+    .table {
+      --bs-table-border-color: #e9ecef !important;
+      --bs-table-striped-color: #e9ecef !important;
+      --bs-table-active-color: #e9ecef !important;
+      --bs-table-hover-color: #e9ecef !important;
+    }
+    
+    /* Specific override for Annual Plan table static state */
+    #annualPlanTable td,
+    #annualPlanTable th {
+      border: none !important;
+      border-top: 1px solid #e9ecef !important;
+      border-color: #e9ecef !important;
+    }
+    
+    /* --- Fix for dropdown overflow --- */
+    .modern-card {
+      overflow: visible;
+    }
+    .table-responsive {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    /* --- Projects page container fix --- */
+    .bg-white.border.rounded.shadow-sm {
+      overflow: visible;
+    }
+    
+    /* --- Dropdown improvements --- */
+    .dropdown-menu {
+      z-index: 1055;
+      border: 1px solid rgba(233, 236, 239, 0.4);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      border-radius: 8px;
+      position: absolute;
+    }
+    .dropdown-item {
+      padding: 8px 16px;
+      transition: background-color 0.2s ease;
+    }
+    .dropdown-item:hover {
+      background-color: rgba(0, 123, 255, 0.08);
+      color: #007bff;
+    }
+    .dropdown-toggle {
+      border-radius: 8px !important;
+    }
 
     /* --- Responsive Adjustments --- */
     @media (min-width: 992px) { /* Desktop view */
-      body { padding-left: 250px; padding-top: 0; }
+      body { padding-left: 260px; padding-top: 0; }
       .top-navbar { display: none !important; }
     }
 
@@ -134,8 +414,19 @@
        }
        .top-navbar .navbar-nav { width: 100%; }
        .navbar-nav .nav-section-title {
-            font-weight: bold; color: #6c757d; text-transform: uppercase;
-            font-size: 0.875em; padding: 0.5rem 1rem; margin-top: 0.5rem;
+            font-weight: 700; 
+            color: #007bff; 
+            text-transform: uppercase;
+            font-size: 0.75rem; 
+            padding: 0.75rem 1rem; 
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            letter-spacing: 1px;
+        }
+        .navbar-nav .nav-section-title i {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
        .navbar-nav hr.mobile-separator { margin: 0.5rem 1rem; }
        .content-wrapper { padding: 1rem; }
@@ -154,7 +445,7 @@
 
 <body>
   <!-- Top Navigation Bar (MOBILE ONLY) -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom top-navbar d-lg-none">
+  <nav class="navbar navbar-expand-lg navbar-light top-navbar d-lg-none" style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(233, 236, 239, 0.4); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);">
     <div class="container-fluid">
       <!-- Alterado span para a e adicionado href -->
       <a class="navbar-brand brand-link" href="/">
@@ -166,23 +457,69 @@
       <div class="collapse navbar-collapse" id="mobileNavContent">
         <ul class="navbar-nav mb-2 mb-lg-0">
           <!-- Links duplicados para mobile dropdown -->
-          <li class="nav-item nav-section-title"><%= lang.projects || 'Projects' %></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_project || 'Create Project') ? 'active' : '' %>" href="/projects/create">➕ <%= lang.new_project || 'New project' %></a></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.projects || 'Projects') ? 'active' : '' %>" href="/projects">📚 <%= lang.projects || 'Projects' %></a></li>
+          <li class="nav-item nav-section-title">
+            <i class="bi bi-folder-fill me-2"></i><%= lang.projects || 'Projects' %>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_project || 'Create Project') ? 'active' : '' %>" href="/projects/create">
+              <i class="bi bi-plus-circle me-2"></i><%= lang.new_project || 'New project' %>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.projects || 'Projects') ? 'active' : '' %>" href="/projects">
+              <i class="bi bi-collection me-2"></i><%= lang.projects || 'Projects' %>
+            </a>
+          </li>
           <li class="nav-item"><hr class="mobile-separator"></li>
-          <li class="nav-item nav-section-title"><%= lang.templates || 'Templates' %></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_template || 'Create Template') ? 'active' : '' %>" href="/templates/create">➕ <%= lang.new_template || 'New template' %></a></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.templates || 'Templates') ? 'active' : '' %>" href="/templates">📄 <%= lang.templates || 'Templates' %></a></li>
+          <li class="nav-item nav-section-title">
+            <i class="bi bi-layout-text-sidebar-reverse me-2"></i><%= lang.templates || 'Templates' %>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_template || 'Create Template') ? 'active' : '' %>" href="/templates/create">
+              <i class="bi bi-plus-circle me-2"></i><%= lang.new_template || 'New template' %>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.templates || 'Templates') ? 'active' : '' %>" href="/templates">
+              <i class="bi bi-file-text me-2"></i><%= lang.templates || 'Templates' %>
+            </a>
+          </li>
           <li class="nav-item"><hr class="mobile-separator"></li>
-          <li class="nav-item nav-section-title"><%= lang.system || 'System' %></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">💳 <%= lang.payment_methods || 'Payment Methods' %></a></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">💰 <%= lang.income_sources || 'Income Sources' %></a></li>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">🤝 <%= lang.creditors || 'Creditors' %></a></li>
+          <li class="nav-item nav-section-title">
+            <i class="bi bi-gear-fill me-2"></i><%= lang.system || 'System' %>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">
+              <i class="bi bi-credit-card me-2"></i><%= lang.payment_methods || 'Payment Methods' %>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">
+              <i class="bi bi-cash-coin me-2"></i><%= lang.income_sources || 'Income Sources' %>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">
+              <i class="bi bi-people me-2"></i><%= lang.creditors || 'Creditors' %>
+            </a>
+          </li>
           <% if ((locals.user && locals.user.role === 'admin') || locals.DEV_MODE) { %>
-            <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.users || 'Users') ? 'active' : '' %>" href="/users">👥 <%= lang.users || 'Users' %></a></li>
+            <li class="nav-item">
+              <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.users || 'Users') ? 'active' : '' %>" href="/users">
+                <i class="bi bi-person-gear me-2"></i><%= lang.users || 'Users' %>
+              </a>
+            </li>
           <% } %>
-          <li class="nav-item"><a class="nav-link <%= typeof title !== 'undefined' && title === (lang.settings || 'Settings') ? 'active' : '' %>" href="/settings">⚙️ <%= lang.settings || 'Settings' %></a></li>
-          <li class="nav-item"><a class="nav-link" href="/logout">🔴 <%= lang.logout || 'Logout' %></a></li>
+          <li class="nav-item">
+            <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.settings || 'Settings') ? 'active' : '' %>" href="/settings">
+              <i class="bi bi-sliders me-2"></i><%= lang.settings || 'Settings' %>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">
+              <i class="bi bi-box-arrow-right me-2 text-danger"></i><%= lang.logout || 'Logout' %>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -198,42 +535,58 @@
     </a>
     <nav class="nav flex-column">
       <!-- Links duplicados para desktop sidebar -->
-      <span class="nav-section-title"><%= lang.projects || 'Projects' %></span>
+      <span class="nav-section-title">
+        <i class="bi bi-folder-fill me-2"></i><%= lang.projects || 'Projects' %>
+      </span>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_project || 'Create Project') ? 'active' : '' %>" href="/projects/create">
-        ➕ <span class="link-text"><%= lang.new_project || 'New project' %></span>
+        <i class="bi bi-plus-circle nav-icon"></i>
+        <span class="link-text"><%= lang.new_project || 'New project' %></span>
       </a>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.projects || 'Projects') ? 'active' : '' %>" href="/projects">
-        📚 <span class="link-text"><%= lang.projects || 'Projects' %></span>
+        <i class="bi bi-collection nav-icon"></i>
+        <span class="link-text"><%= lang.projects || 'Projects' %></span>
       </a>
       <hr>
-      <span class="nav-section-title"><%= lang.templates || 'Templates' %></span>
+      <span class="nav-section-title">
+        <i class="bi bi-layout-text-sidebar-reverse me-2"></i><%= lang.templates || 'Templates' %>
+      </span>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.create_template || 'Create Template') ? 'active' : '' %>" href="/templates/create">
-        ➕ <span class="link-text"><%= lang.new_template || 'New template' %></span>
+        <i class="bi bi-plus-circle nav-icon"></i>
+        <span class="link-text"><%= lang.new_template || 'New template' %></span>
       </a>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.templates || 'Templates') ? 'active' : '' %>" href="/templates">
-        📄 <span class="link-text"><%= lang.templates || 'Templates' %></span>
+        <i class="bi bi-file-text nav-icon"></i>
+        <span class="link-text"><%= lang.templates || 'Templates' %></span>
       </a>
       <hr>
-      <span class="nav-section-title"><%= lang.system || 'System' %></span>
+      <span class="nav-section-title">
+        <i class="bi bi-gear-fill me-2"></i><%= lang.system || 'System' %>
+      </span>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.payment_methods || 'Payment Methods') ? 'active' : '' %>" href="/payments">
-        💳 <span class="link-text"><%= lang.payment_methods || 'Payment Methods' %></span>
+        <i class="bi bi-credit-card nav-icon"></i>
+        <span class="link-text"><%= lang.payment_methods || 'Payment Methods' %></span>
       </a>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.income_sources || 'Income Sources') ? 'active' : '' %>" href="/income-sources">
-        💰 <span class="link-text"><%= lang.income_sources || 'Income Sources' %></span>
+        <i class="bi bi-cash-coin nav-icon"></i>
+        <span class="link-text"><%= lang.income_sources || 'Income Sources' %></span>
       </a>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.creditors || 'Creditors') ? 'active' : '' %>" href="/creditors">
-        🤝 <span class="link-text"><%= lang.creditors || 'Creditors' %></span>
+        <i class="bi bi-people nav-icon"></i>
+        <span class="link-text"><%= lang.creditors || 'Creditors' %></span>
       </a>
       <% if ((locals.user && locals.user.role === 'admin') || locals.DEV_MODE) { %>
         <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.users || 'Users') ? 'active' : '' %>" href="/users">
-          👥 <span class="link-text"><%= lang.users || 'Users' %></span>
+          <i class="bi bi-person-gear nav-icon"></i>
+          <span class="link-text"><%= lang.users || 'Users' %></span>
         </a>
       <% } %>
       <a class="nav-link <%= typeof title !== 'undefined' && title === (lang.settings || 'Settings') ? 'active' : '' %>" href="/settings">
-        ⚙️ <span class="link-text"><%= lang.settings || 'Settings' %></span>
+        <i class="bi bi-sliders nav-icon"></i>
+        <span class="link-text"><%= lang.settings || 'Settings' %></span>
       </a>
       <a class="nav-link" href="/logout">
-        🔴 <span class="link-text"><%= lang.logout || 'Logout' %></span>
+        <i class="bi bi-box-arrow-right nav-icon text-danger"></i>
+        <span class="link-text"><%= lang.logout || 'Logout' %></span>
       </a>
     </nav>
   </div>

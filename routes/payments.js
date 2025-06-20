@@ -57,11 +57,15 @@ module.exports = (db, authMiddleware) => {
       if (err) {
         console.error('[GET /payments] Error fetching payment methods:', err.message);
         req.flash('error', lang.error_fetching_payments || 'Error fetching payment methods.');
-        return res.render('payments-methods', { payments: [] }); // Render page even on error
+        return res.render('payments-methods', { 
+          title: lang.payment_methods || 'Payment Methods',
+          payments: [] 
+        }); // Render page even on error
       }
       // Render the view, passing payments data. lang is already in res.locals.
       // Countries/currencies will be loaded via JS for the modals.
       res.render('payments-methods', {
+        title: lang.payment_methods || 'Payment Methods',
         payments: payments || []
       });
     });

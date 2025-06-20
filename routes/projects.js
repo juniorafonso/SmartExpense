@@ -51,7 +51,12 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
         console.error('[GET /projects] Error fetching projects with aggregated data:', err.message);
         req.flash('error', lang.error_fetching_projects || 'Error fetching projects.');
         // Render with empty arrays and current config even on error
-        return res.render('projects', { activeProjects: [], finishedProjects: [], config: currentConfig }); // Pass currentConfig
+        return res.render('projects', { 
+          title: lang.projects || 'Projects',
+          activeProjects: [], 
+          finishedProjects: [], 
+          config: currentConfig 
+        }); // Pass currentConfig
       }
 
       // Separate projects by status
@@ -59,6 +64,7 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
       const finishedProjects = projects.filter(p => p.status === 'finished');
 
       res.render('projects', {
+        title: lang.projects || 'Projects',
         activeProjects,
         finishedProjects,
         config: currentConfig // Pass current config for currency formatting
@@ -75,9 +81,15 @@ module.exports = (db, upload, getConfig, authMiddleware) => { // <-- Changed con
       if (err) {
         console.error('[GET /projects/create] Error fetching templates:', err.message);
         req.flash('error', lang.error_fetching_templates || 'Error fetching templates.');
-        return res.render('create-project', { templates: [] });
+        return res.render('create-project', { 
+          title: lang.create_project || 'Create Project',
+          templates: [] 
+        });
       }
-      res.render('create-project', { templates: templates || [] });
+      res.render('create-project', { 
+        title: lang.create_project || 'Create Project',
+        templates: templates || [] 
+      });
     });
   });
 

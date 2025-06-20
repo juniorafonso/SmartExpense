@@ -1,4 +1,12 @@
-<h1 class="mb-4"><span class="fw-bold"><%= lang.project || 'Project' %>:</span> <%= project.name %></h1>
+<!-- Project Header -->
+<div class="d-flex justify-content-between align-items-center mb-5">
+  <div>
+    <h1 class="mb-2" style="color: #495057; font-weight: 700;">
+      <i class="bi bi-folder-open me-2"></i><%= lang.project || 'Project' %>: <%= project.name %>
+    </h1>
+    <p class="text-muted mb-0">Manage incomes and expenses for this project.</p>
+  </div>
+</div>
 
 
 <script>
@@ -190,9 +198,9 @@
 
   window.fileFormatter = function(value) {
     if (value) {
-      return '<a href="/uploads/' + encodeURIComponent(value) + '" target="_blank" class="text-decoration-none" title="' + value + '">💾</a>';
+      return '<a href="/uploads/' + encodeURIComponent(value) + '" target="_blank" class="text-decoration-none" title="' + value + '"><i class="bi bi-file-earmark-arrow-down"></i></a>';
     }
-    return '<span class="text-muted">🚫</span>';
+    return '<span class="text-muted"><i class="bi bi-dash-circle"></i></span>';
   };
 
   window.notesFormatter = function(value, row) {
@@ -201,7 +209,7 @@
       const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       return '<span tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" data-bs-content="' + escapedValue + '" title="' + (lang.notes || 'Notes') + '">' + shortNotes + '</span>';
     } else {
-      return '<span title="' + (lang.no_notes || 'No notes') + '">🚫</span>';
+      return '<span title="' + (lang.no_notes || 'No notes') + '"><i class="bi bi-dash-circle text-muted"></i></span>';
     }
   };
 
@@ -431,25 +439,117 @@
   .bootstrap-table .fixed-table-header {
     z-index: 1040;
   }
+
+  /* Override Bootstrap Table header styles to match our custom styling */
+  #incomesTable thead th,
+  #expensesTable thead th {
+    background-color: #f8f9fa !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    color: #495057 !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.5px !important;
+    padding: 1.2rem 1rem !important;
+  }
+
+  /* Ensure table body cells follow our styling */
+  #incomesTable tbody td,
+  #expensesTable tbody td {
+    border: none !important;
+    border-top: 1px solid #e9ecef !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 1rem !important;
+    vertical-align: middle !important;
+  }
+
+  /* Override any Bootstrap Table default borders */
+  #incomesTable,
+  #expensesTable {
+    border: none !important;
+  }
+
+  #incomesTable th,
+  #expensesTable th,
+  #incomesTable td,
+  #expensesTable td {
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+  }
+
+  /* Fix Bootstrap Table container borders */
+  .bootstrap-table .fixed-table-container {
+    border: none !important;
+  }
+
+  .bootstrap-table .fixed-table-header table {
+    border: none !important;
+  }
+
+  .bootstrap-table .fixed-table-body {
+    border: none !important;
+  }
+
+  /* Force remove all black borders from Bootstrap Table */
+  .bootstrap-table table,
+  .bootstrap-table thead,
+  .bootstrap-table tbody,
+  .bootstrap-table tfoot,
+  .bootstrap-table tr,
+  .bootstrap-table th,
+  .bootstrap-table td {
+    border: none !important;
+    border-color: transparent !important;
+  }
+
+  /* Specifically target the Bootstrap Table wrapper */
+  div[data-toggle="table"] table,
+  div[data-toggle="table"] thead,
+  div[data-toggle="table"] tbody,
+  div[data-toggle="table"] tr,
+  div[data-toggle="table"] th,
+  div[data-toggle="table"] td {
+    border: none !important;
+    border-color: transparent !important;
+  }
+
+  /* Re-apply only the top border for body cells */
+  #incomesTable tbody tr:not(:first-child) td,
+  #expensesTable tbody tr:not(:first-child) td {
+    border-top: 1px solid #e9ecef !important;
+  }
 </style>
 
-<div class="mb-3 text-start d-flex flex-wrap gap-2">
-  <button class="btn btn-success" onclick="showAddExpenseForm()"><%= lang.add_expense || 'Add Expense' %></button>
-  <button class="btn btn-primary" onclick="showAddIncomeForm()"><%= lang.add_income || 'Add Income' %></button>
-  <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProjectModal">
-    <%= lang.edit_project || 'Edit Project' %>
+<div class="mb-4 text-start d-flex flex-wrap gap-2">
+  <button class="btn btn-modern btn-success" onclick="showAddExpenseForm()">
+    <i class="bi bi-plus-circle me-2"></i><%= lang.add_expense || 'Add Expense' %>
+  </button>
+  <button class="btn btn-modern btn-primary" onclick="showAddIncomeForm()">
+    <i class="bi bi-plus-circle me-2"></i><%= lang.add_income || 'Add Income' %>
+  </button>
+  <button type="button" class="btn btn-modern btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProjectModal">
+    <i class="bi bi-pencil me-2"></i><%= lang.edit_project || 'Edit Project' %>
   </button>
   <form action="/projects/<%= project.name %>/delete" method="POST" onsubmit="return confirm('<%= lang.confirm_delete_project || 'Are you sure you want to delete this project?' %>')" style="display:inline;">
-    <button type="submit" class="btn btn-outline-danger"><%= lang.delete || 'Delete' %></button>
+    <button type="submit" class="btn btn-modern btn-outline-danger">
+      <i class="bi bi-trash me-2"></i><%= lang.delete || 'Delete' %>
+    </button>
   </form>
-  <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addFromTemplateModal">
-      <%= lang.add_from_template || 'Add from Template' %>
+  <button type="button" class="btn btn-modern btn-info" data-bs-toggle="modal" data-bs-target="#addFromTemplateModal">
+    <i class="bi bi-file-text me-2"></i><%= lang.add_from_template || 'Add from Template' %>
   </button>
 </div>
 
-<h3 class="mt-4 mb-3"><%= lang.incomes || 'Incomes' %></h3>
+<h3 class="mt-4 mb-3" style="color: #28a745; font-weight: 600;"><i class="bi bi-arrow-up-circle-fill me-2"></i><%= lang.incomes || 'Incomes' %></h3>
 <div id="incomesToolbar" class="mb-2"></div>
-<div class="table-responsive bg-white border rounded p-2 shadow-sm">
+<div class="table-responsive bg-white border rounded p-3 shadow-sm">
   <table
     id="incomesTable"
     class="table table-hover table-sm align-middle"
@@ -466,7 +566,7 @@
     data-sort-name="date"
     data-sort-order="desc"
   >
-    <thead class="table-light">
+    <thead>
       <tr>
         <th data-field="id" data-visible="false">ID</th>
         <th data-field="name" data-sortable="true"><%= lang.name || 'Name' %></th>
@@ -484,10 +584,10 @@
   </table>
 </div>
 
-<h3 class="mt-4 mb-3"><%= lang.expenses || 'Expenses' %></h3>
+<h3 class="mt-4 mb-3" style="color: #dc3545; font-weight: 600;"><i class="bi bi-arrow-down-circle-fill me-2"></i><%= lang.expenses || 'Expenses' %></h3>
 <div id="toolbar" class="mb-2"></div>
 
-<div class="table-responsive bg-white border rounded p-2 shadow-sm">
+<div class="table-responsive bg-white border rounded p-3 shadow-sm">
   <table
     id="expensesTable"
     class="table table-hover table-sm align-middle table-fixed-layout"
